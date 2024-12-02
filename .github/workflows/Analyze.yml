@@ -1,0 +1,138 @@
+name: EMRA For ColorOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      link:
+        description: "ROM 链接"
+        required: true
+      push:
+        description: "上传数据库"
+        required: true
+        type: choice
+        options:
+        - "是"
+        - "否"
+      devicename:
+        description: "设备名"
+        required: false
+      osversion:
+        description: "系统版本"
+        required: false
+
+jobs:
+  Analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install dependence
+      run: |
+        pip install -r requirements.txt
+
+    - name: Download payload-dumper-go
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: "ssut/payload-dumper-go"
+        latest: true
+        extract: true
+        fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
+
+    - name: Download extract.erofs
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: "sekaiacg/erofs-utils"
+        latest: true
+        extract: true
+        fileName: "erofs-utils-*-Linux_x86_64-*.zip"
+
+    - name: Set permission
+      run: |
+       chmod +x extract.erofs
+       rm *.tar.gz *.zip
+
+    - name: Download ROM
+      run: |
+        python main.py -d "${{ github.event.inputs.link }}"
+
+    - name: Unzip payload.bin
+      run: |
+        python main.py -p
+        rm *.zip
+
+    - name: Unzip img
+      run: |
+        python main.py -i
+        rm payload.bin
+    
+    - name: Unzip file
+      run: |
+        ./extract.erofs -i my_product.img -x -T8
+        ./extract.erofs -i my_stock.img -x -T8
+        ./extract.erofs -i my_bigball.img -x -T8
+        ./extract.erofs -i my_heytap.img -x -T8
+        ./extract.erofs -i system_ext.img -x -T8
+        rm *.img
+    
+    - name: Remove exclude apk
+      run: |
+        python main.py -a
+
+    - name: Upload special apk
+      uses: actions/upload-artifact@v4
+      with:
+        name: Special_apk
+        path: |
+          output_apk/OplusLauncher.apk
+          output_apk/OppoGallery2.apk
+          output_apk/PhoneManager.apk
+          output_apk/Battery.apk
+          output_apk/NotificationCenter.apk
+          output_apk/Settings.apk
+          output_apk/OplusAppPlatform.apk
+          
+    - name: Get version
+      run: |
+        python main.py -n
+
+    - name: Update database
+      run: |
+        python main.py -u
+
+    - name: Rename
+      run: |
+        python main.py -m
+
+    - name: Upload database
+      uses: actions/upload-artifact@v4
+      with:
+        name: Database
+        path: |
+          app_version.json
+          app_code.json
+    
+    - name: Upload update apk
+      uses: actions/upload-artifact@v4
+      with:
+        name: Update_apk
+        path: |
+          update_apk
+          update_name_apk
+
+    - name: Push database
+      continue-on-error: true
+      run: |
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --global user.name "${GITHUB_ACTOR}"
+        git add app_version.json app_code.json
+        if [ "${{ github.event.inputs.push }}" = "是" ]; then
+            git commit -m "Database：Update ${{ github.event.inputs.devicename }} ${{ github.event.inputs.osversion }} by Actions"
+            git push
+          elif [ "${{ github.event.inputs.push }}" = "否" ]; then
+            exit 0
+          else
+            exit 0
+          fi
+        

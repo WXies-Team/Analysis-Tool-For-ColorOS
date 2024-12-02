@@ -1,0 +1,32 @@
+# 忽略所有 .bin 文件
+*.bin
+
+# 忽略所有 .apk 文件
+*.apk
+
+# 忽略所有 .img 文件
+*.img
+
+# 忽略所有 .zip 文件
+*.zip
+
+# 忽略所有 .exe 文件
+*.exe
+
+# 忽略所有 .dll 文件
+*.dll
+
+# 忽略指定的文件
+app_code_name.json
+
+# 忽略指定的文件夹
+update_name_apk/
+update_apk/
+output_apk/
+__pycache__/
+system_ext/
+my_heytap/
+my_bigball/
+my_stock/
+my_product/
+config/
