@@ -29,6 +29,16 @@ if not os.path.exists(output_dir):
 # 获取名为"output_apk"目录中所有以".apk"为后缀的文件列表
 apk_files = [f for f in os.listdir(output_dir) if f.endswith('.apk')]
 
+# 外部工具路径
+tools_path_mapping = {
+                      ("Windows", "AMD64"): "./tools/Windows/AMD64/",
+                      ("Linux", "x86_64"): "./tools/Linux/x86_64/",
+                      ("Linux", "arm64"): "./tools/Linux/arm64/",
+                      ("Darwin", "x86_64"): "./tools/Darwin/x86_64/",
+                      ("Darwin", "arm64"): "./tools/Darwin/arm64/"
+                     }
+tools_path = tools_path_mapping.get((platform.system(), platform.machine()))
+
 # 定义了两个字符串常量，分别用于指定排除 APK 的文件路径和 APK 版本号和名称的 JSON 文件路径
 EXCLUDE_APK_PATH = 'exclude_apk.txt'
 APK_VERSION = 'app_version.json'
