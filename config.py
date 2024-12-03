@@ -36,3 +36,34 @@ APK_CODE = 'app_code.json'
 APK_APP_NAME = 'app_name.json'
 # 定义一个临时字典，用于存储版本名相同但版本号有所变更的 APK
 APK_CODE_NAME = 'app_code_name.json'
+
+# 相关分区
+partitions = [
+              "my_product",
+              "my_stock",
+              "my_bigball",
+              "my_heytap",
+              "system_ext"
+             ]
+
+# 需要删除的文件
+files_to_delete = [
+                   "payload.bin", 
+                   "my_product.img", 
+                   "my_stock.img", 
+                   "my_bigball.img", 
+                   "my_heytap.img", 
+                   "system_ext.img", 
+                   "app_code_name.json"
+                  ]
+folders_to_delete = [
+                     "output_apk", 
+                     "update_apk", 
+                     "update_name_apk", 
+                     "config", 
+                     "my_heytap", 
+                     "my_product", 
+                     "my_stock", 
+                     "system_ext", 
+                     "my_bigball"
+                    ]

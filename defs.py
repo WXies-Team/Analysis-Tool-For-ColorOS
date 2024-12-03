@@ -70,17 +70,14 @@ def extract_img():
     # 使用 subprocess 模块运行 shell 命令，执行 payload-dumper-go 的命令，从 payload.bin 文件中提取指定镜像文件
     # -c 参数指定最大并发数为 8，-o 指定提取后的文件输出到当前目录下
     # -p 参数指定提取指定镜像，"payload.bin" 为输入文件
-    subprocess.run(["./payload-dumper-go", "-c", "8", "-o","./", "-p", "my_product,my_stock,my_bigball,my_heytap,system_ext", "payload.bin"])
+    partition_string = ",".join(partitions)
+    subprocess.run(["./payload-dumper-go", "-c", "8", "-o","./", "-p", partition_string, "payload.bin"])
 
 
 def extract_files():
     try:
-        # 使用 subprocess 模块运行 shell 命令，提取镜像文件中的文件
-            subprocess.run(["./extract.erofs", "-i", "my_product.img", "-x", "-T16"])
-            subprocess.run(["./extract.erofs", "-i", "my_stock.img", "-x", "-T16"])
-            subprocess.run(["./extract.erofs", "-i", "my_bigball.img", "-x", "-T16"])
-            subprocess.run(["./extract.erofs", "-i", "my_heytap.img", "-x", "-T16"])
-            subprocess.run(["./extract.erofs", "-i", "system_ext.img", "-x", "-T16"])
+        for image in partitions:
+            subprocess.run(["./extract.erofs", "-i", image + ".img", "-x", "-T8"])
     except Exception as e:
         print("解包失败:", e)
 
@@ -264,9 +261,6 @@ def update_apk_name():
 
 def delete_files_and_folders():
     """删除指定的文件和文件夹"""
-    files_to_delete = ["payload.bin", "my_product.img", "my_stock.img", "my_bigball.img", "my_heytap.img", "system_ext.img", "app_code_name.json"]
-    folders_to_delete = ["output_apk", "update_apk", "update_name_apk", "config", "my_heytap", "my_product", "my_stock", "system_ext", "my_bigball"]
-
     for file in files_to_delete:
         if os.path.exists(file):
             try:
