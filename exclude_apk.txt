@@ -92,6 +92,7 @@ NetworkAssistSys.apk
 NetworkHealthService.apk
 NetworkStackOverlayCHN.apk
 NfcNci.apk
+NotificationCenter.apk
 OBrain.apk
 OcloudApp.apk
 OnePlusCameraPicProcService.apk

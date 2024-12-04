@@ -64,14 +64,11 @@ jobs:
       with:
         name: Special_apk
         path: |
-          output_apk/OplusLauncher.apk
-          output_apk/OppoGallery2.apk
-          output_apk/PhoneManager.apk
-          output_apk/Battery.apk
-          output_apk/NotificationCenter.apk
+          output_apk/OplusLanuncher.apk
           output_apk/Settings.apk
-          output_apk/OplusAppPlatform.apk
-          
+          output_apk/Battery.apk
+          output_apk/PhoneManager.apk
+                  
     - name: Get version
       run: |
         python main.py -n
