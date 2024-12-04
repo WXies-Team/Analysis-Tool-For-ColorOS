@@ -114,3 +114,8 @@ jobs:
           else
             exit 0
           fi
+
+    - name: Get Info
+      continue-on-error: true
+      run: |
+        python main.py -o
