@@ -17,11 +17,7 @@
 
 ## 如何使用
 
-1. 克隆此仓库：
-
-   ```
-   https://github.com/WXies-Team/Analysis-Tool-For-ColorOS.git
-   ```
+1. 在 [Release](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases/latest) 内下载压缩包：
 
 2. 确保已安装 Python 3.x, aria2c, 7zip 并安装依赖库：
 
