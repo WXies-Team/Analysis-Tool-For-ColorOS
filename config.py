@@ -77,3 +77,9 @@ folders_to_delete = [
                      "system_ext", 
                      "my_bigball"
                     ]
+
+# 获取信息
+properties = {
+              "ro.build.display.ota": "软件版本号",
+              "ro.product.oplus.cpuinfo": "CPU 信息"
+             }

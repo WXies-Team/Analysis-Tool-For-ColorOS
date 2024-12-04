@@ -299,6 +299,11 @@ def get_info():
     try:
         with open("./my_product/build.prop", "r") as file:
             lines = file.readlines()
+            for line in lines:
+                if line.startswith("ro.build.display.ota"):
+                    device_name = line.split("=")[1].split("_")[0].strip()
+                    print(f"设备名: {device_name}")
+                    break
             for key, label in properties.items():
                 for line in lines:
                     if line.startswith(key):
