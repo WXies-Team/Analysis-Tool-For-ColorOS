@@ -1,4 +1,4 @@
-name: EMRA For ColorOS
+name: Analysis Tool For HyperOS
 
 on:
   workflow_dispatch:
@@ -32,26 +32,10 @@ jobs:
       run: |
         pip install -r requirements.txt
 
-    - name: Download payload-dumper-go
-      uses: robinraju/release-downloader@v1.10
-      with:
-        repository: "ssut/payload-dumper-go"
-        latest: true
-        extract: true
-        fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-
-    - name: Download extract.erofs
-      uses: robinraju/release-downloader@v1.10
-      with:
-        repository: "sekaiacg/erofs-utils"
-        latest: true
-        extract: true
-        fileName: "erofs-utils-*-Linux_x86_64-*.zip"
-
     - name: Set permission
       run: |
-       chmod +x extract.erofs
-       rm *.tar.gz *.zip
+       chmod +x ./tools/Linux/x86_64/extract.erofs
+       chmod +x ./tools/Linux/x86_64/payload-dumper-go
 
     - name: Download ROM
       run: |
@@ -69,13 +53,8 @@ jobs:
     
     - name: Unzip file
       run: |
-        ./extract.erofs -i my_product.img -x -T8
-        ./extract.erofs -i my_stock.img -x -T8
-        ./extract.erofs -i my_bigball.img -x -T8
-        ./extract.erofs -i my_heytap.img -x -T8
-        ./extract.erofs -i system_ext.img -x -T8
-        rm *.img
-    
+        python main.py -f
+
     - name: Remove exclude apk
       run: |
         python main.py -a
@@ -128,11 +107,10 @@ jobs:
         git config --global user.name "${GITHUB_ACTOR}"
         git add app_version.json app_code.json
         if [ "${{ github.event.inputs.push }}" = "是" ]; then
-            git commit -m "Database：Update ${{ github.event.inputs.devicename }} ${{ github.event.inputs.osversion }} by Actions"
+            git commit -m "chore: update ${{ github.event.inputs.devicename }} ${{ github.event.inputs.osversion }} by action"
             git push
           elif [ "${{ github.event.inputs.push }}" = "否" ]; then
             exit 0
           else
             exit 0
           fi
-        
