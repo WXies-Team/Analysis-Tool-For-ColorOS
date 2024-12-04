@@ -70,14 +70,35 @@ def extract_img():
     # 使用 subprocess 模块运行 shell 命令，执行 payload-dumper-go 的命令，从 payload.bin 文件中提取指定镜像文件
     # -c 参数指定最大并发数为 8，-o 指定提取后的文件输出到当前目录下
     # -p 参数指定提取指定镜像，"payload.bin" 为输入文件
-    partition_string = ",".join(partitions)
-    subprocess.run([f"{tools_path}payload-dumper-go", "-c", "8", "-o","./", "-p", partition_string, "payload.bin"])
+    subprocess.run(["./payload-dumper-go", "-c", "8", "-o","./", "-p", "my_product,my_stock,my_bigball,my_heytap,system_ext", "payload.bin"])
 
 
 def extract_files():
     try:
-        for image in partitions:
-            subprocess.run([f"{tools_path}extract.erofs", "-i", image + ".img", "-x", "-T8"])
+        # 使用 subprocess 模块运行 shell 命令，提取镜像文件中的文件
+        # 使用 file 命令获取当前镜像打包格式
+        output = subprocess.check_output(["file", "my_product.img"]).decode("utf-8")
+        print("当前镜像打包格式:", output)
+        if "EROFS filesystem" in output:
+            # 如果输出内容包含 EROFS filesystem 则使用 extract.erofs 解压
+            # -i 参数指定输入的镜像文件为，-x 参数指定提取文件，-T 参数指定使用线程提取文件
+            subprocess.run(["./extract.erofs", "-i", "my_product.img", "-x", "-T16"])
+            subprocess.run(["./extract.erofs", "-i", "my_stock.img", "-x", "-T16"])
+            subprocess.run(["./extract.erofs", "-i", "my_bigball.img", "-x", "-T16"])
+            subprocess.run(["./extract.erofs", "-i", "my_heytap.img", "-x", "-T16"])
+            subprocess.run(["./extract.erofs", "-i", "system_ext.img", "-x", "-T16"])
+        elif "data" in output:
+            # 如果输出内容包含 data 则使用7zip解压
+            # x 参数指定输入的镜像文件为，-o 提取指定提取文件到目录下
+            subprocess.run(["7z", "x", "my_product.img", r"-o.\my_product"])
+            subprocess.run(["7z", "x", "my_stock.img", r"-o.\my_stock"])
+            subprocess.run(["7z", "x", "my_bigball.img", r"-o.\my_bigball"])
+            subprocess.run(["7z", "x", "my_heytap.img", r"-o.\my_heytap"])
+            subprocess.run(["7z", "x", "system_ext.img", r"-o.\system_ext"])
+        else:
+            print("未知的文件系统类型")
+    except subprocess.CalledProcessError as e:
+        print("解包失败:", e)
     except Exception as e:
         print("解包失败:", e)
 
@@ -261,6 +282,9 @@ def update_apk_name():
 
 def delete_files_and_folders():
     """删除指定的文件和文件夹"""
+    files_to_delete = ["payload.bin", "my_product.img", "my_stock.img", "my_bigball.img", "my_heytap.img", "system_ext.img", "app_code_name.json"]
+    folders_to_delete = ["output_apk", "update_apk", "update_name_apk", "config", "my_heytap", "my_product", "my_stock", "system_ext", "my_bigball"]
+
     for file in files_to_delete:
         if os.path.exists(file):
             try:
