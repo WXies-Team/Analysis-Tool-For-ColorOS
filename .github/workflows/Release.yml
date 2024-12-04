@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Get latest commit message
+      id: commit_message
+      run: |
+        COMMIT_MSG=$(git log -1 --pretty=%B)
+        echo "COMMIT_MSG=${COMMIT_MSG}" >> $GITHUB_ENV
+
+    - name: Create a zip package of the repository
+      run: |
+        zip -r Analysis-Tool-For-ColorOS.zip ./*
+    
+    - name: Remove .github folder and .gitignore
+      run: |
+        rm -rf .github
+        rm -f .gitignore
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Analysis-Tool-For-ColorOS
+        path: Analysis-Tool-For-ColorOS.zip
+
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## Commit Message:
+          ${{ env.COMMIT_MSG }}
+          ### Files Included:
+          - Analysis-Tool-For-ColorOS.zip
