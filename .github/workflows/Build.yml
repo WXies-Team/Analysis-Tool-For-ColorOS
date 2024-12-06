@@ -89,7 +89,7 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-HyperOS-Linux-x86_64.zip" "./Linux-x86_64/"
+          zip -r "./Analysis-Tool-For-HyperOS-Linux-x86_64.zip" "./Linux-x86_64/*"
           mv "./Analysis-Tool-For-HyperOS-Linux-x86_64.zip" output/
           rm ./*.zip
           rm ./*.tar.gz
@@ -121,7 +121,7 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-HyperOS-Linux-arm64.zip" "./Linux-arm64/"
+          zip -r "./Analysis-Tool-For-HyperOS-Linux-arm64.zip" "./Linux-arm64/*"
           mv "./Analysis-Tool-For-HyperOS-Linux-arm64.zip" output/
           rm ./*.zip
           rm ./*.tar.gz
@@ -154,7 +154,7 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-HyperOS-Windows-x86_64" "./Windows-x86_64/"
+          zip -r "./Analysis-Tool-For-HyperOS-Windows-x86_64" "./Windows-x86_64/*"
           mv "./Analysis-Tool-For-HyperOS-Windows-x86_64.zip" output/
           rm ./*.zip
           rm ./*.tar.gz
@@ -186,7 +186,7 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-HyperOS-Darwin-x86_64" "./Darwin-x86_64/"
+          zip -r "./Analysis-Tool-For-HyperOS-Darwin-x86_64" "./Darwin-x86_64/*"
           mv "./Analysis-Tool-For-HyperOS-Darwin-x86_64.zip" output/
           rm ./*.zip
           rm ./*.tar.gz
@@ -218,7 +218,7 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-HyperOS-Darwin-arm64" "./Darwin-arm64/"
+          zip -r "./Analysis-Tool-For-HyperOS-Darwin-arm64" "./Darwin-arm64/*"
           mv "./Analysis-Tool-For-HyperOS-Darwin-arm64.zip" output/
           rm ./*.zip
           rm ./*.tar.gz
