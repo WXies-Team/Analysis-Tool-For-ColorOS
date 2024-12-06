@@ -28,7 +28,7 @@ jobs:
     - name: Download erofs-utils-Linux-x86_64
       uses: robinraju/release-downloader@v1.10
       with:
-        repository: "Analysis-Tool-For-ColorOS"
+        repository: "WXies-Team/Analysis-Tool-For-ColorOS"
         latest: true
         extract: true
         fileName: "Analysis-Tool-For-ColorOS-Linux-x86_64.zip"
