@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 仅当推送符合 "v*" 格式的标签时触发
+
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 确保拉取完整历史和标签
+
+      # 配置 Git 提交作者信息
+      - name: Configure Git Author
+        run: |
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git config --global user.name "${GITHUB_ACTOR}"
+
+      # 获取两个标签之间的提交日志并生成版本说明
+      - name: Generate Release Notes
+        run: |
+          # 获取当前标签
+          currentTag=$(git describe --tags --exact-match)
+          
+          # 获取前一个标签
+          previousTag=$(git describe --tags "$(git rev-list --tags --skip=1 --max-count=1)" || echo "")
+          
+          # 如果没有前一个标签，仅显示当前标签的所有提交
+          if [ -z "$previousTag" ]; then
+            git log --pretty=format:"- %s" "$currentTag" > release_notes.md
+          else
+            git log --pretty=format:"- %s" "$previousTag..$currentTag" > release_notes.md
+          fi
+          
+          echo "Release notes generated:"
+          cat release_notes.md
+
+      # 提交更新的文件（可选，若需要推送更新说明到仓库）
+      - name: Commit and Push Changes
+        run: |
+          git add release_notes.md
+          git commit -m "Release notes for ${GITHUB_REF_NAME}"
+          git push
+
+      # 发布 GitHub Release
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_notes.md  # 附加生成的版本说明文件
+          body_path: release_notes.md  # 设置 Release 的内容
+          tag_name: ${{ github.ref_name }}  # 使用当前触发的标签
+          name: Release ${{ github.ref_name }}  # Release 名称
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
