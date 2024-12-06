@@ -51,12 +51,15 @@ jobs:
     
     - name: Install dependence
       run: |
+        mkdir tools
+        mv extract.erofs tools/
+        mv payload-dumper-go tools/
         pip install -r requirements.txt
 
     - name: Set permission
       run: |
-       chmod +x ./extract.erofs
-       chmod +x ./payload-dumper-go
+       chmod +x ./tools/extract.erofs
+       chmod +x ./tools/payload-dumper-go
 
     - name: Download ROM
       run: |
