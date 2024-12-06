@@ -27,11 +27,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        repository: "WXies-Team/Analysis-Tool-For-ColorOS"
-        latest: true
-        extract: true
-        fileName: "Analysis-Tool-For-ColorOS-Linux-x86_64.zip"
       
     - name: Download payload-dumper-go
       uses: robinraju/release-downloader@v1.10
@@ -106,7 +101,7 @@ jobs:
       with:
         name: build.prop
         path: |
-          /my_product/build.prop
+          my_product/build.prop
 
     - name: Rename
       run: |
