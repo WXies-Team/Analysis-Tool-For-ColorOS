@@ -17,7 +17,7 @@
 
 ## 如何使用
 
-1. 在 [Release](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases/latest) 内下载压缩包：
+1. 在 [Release](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases/latest) 内下载压缩包（测试版在 [Action](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/actions/workflows/Build.yml) 内）：
 
 2. 确保已安装 Python 3.x, aria2c, 7zip 并安装依赖库：
 
