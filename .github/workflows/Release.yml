@@ -40,13 +40,6 @@ jobs:
           echo "Release notes generated:"
           cat release_notes.md
 
-      # 提交更新的文件（可选，若需要推送更新说明到仓库）
-      - name: Commit and Push Changes
-        run: |
-          git add release_notes.md
-          git commit -m "Release notes for ${GITHUB_REF_NAME}"
-          git push
-
       # 发布 GitHub Release
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -54,6 +47,6 @@ jobs:
           files: release_notes.md  # 附加生成的版本说明文件
           body_path: release_notes.md  # 设置 Release 的内容
           tag_name: ${{ github.ref_name }}  # 使用当前触发的标签
-          name: Release ${{ github.ref_name }}  # Release 名称
+          name: ${currentTag}  # Release 名称
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
