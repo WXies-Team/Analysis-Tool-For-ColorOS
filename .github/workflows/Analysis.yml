@@ -1,4 +1,4 @@
-name: Analysis Tool For HyperOS
+name: Analysis Tool For ColorOS
 
 on:
   workflow_dispatch:
@@ -25,8 +25,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Download erofs-utils-Linux-x86_64
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: "Analysis-Tool-For-ColorOS"
+        latest: true
+        extract: true
+        fileName: "Analysis-Tool-For-ColorOS-Linux-x86_64.zip"
     
     - name: Install dependence
       run: |
@@ -34,8 +39,8 @@ jobs:
 
     - name: Set permission
       run: |
-       chmod +x ./tools/Linux/x86_64/extract.erofs
-       chmod +x ./tools/Linux/x86_64/payload-dumper-go
+       chmod +x ./tools/extract.erofs
+       chmod +x ./tools/payload-dumper-go
 
     - name: Download ROM
       run: |
