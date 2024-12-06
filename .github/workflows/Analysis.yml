@@ -35,6 +35,7 @@ jobs:
     
     - name: Install dependence
       run: |
+        cd ./Analysis-Tool-For-ColorOS-Linux-x86_64
         pip install -r requirements.txt
 
     - name: Set permission
