@@ -14,32 +14,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate Release Notes
-        id: release-notes
+      - name: Generate release.md
         run: |
-          # 获取当前标签
-          currentTag=$(git describe --tags --exact-match)
-          
-          # 获取前一个标签
-          previousTag=$(git describe --tags "$(git rev-list --tags --skip=1 --max-count=1)" || echo "")
-          
-          # 如果没有前一个标签，仅显示当前标签的所有提交
-          if [ -z "$previousTag" ]; then
-            release_notes="## What's Changed</br>$(git log --pretty=format:"* %s" "$currentTag")"
-          else
-            release_notes="## What's Changed</br>$(git log --pretty=format:"* %s" "$previousTag..$currentTag")"
-          fi
-          
-          # 设置输出变量
-          echo "release_notes<<EOF" >> $GITHUB_ENV
-          echo "$release_notes" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          tags=($(git tag --merged $(git rev-parse HEAD) --sort=-creatordate))
+          preTag=$(curl --silent "https://api.github.com/repos/chen08209/FlClash/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")' || echo "")
+          currentTag=""
+          for ((i = 0; i <= ${#tags[@]}; i++)); do
+            if (( i < ${#tags[@]} )); then
+              tag=${tags[$i]}
+            else
+              tag=""
+            fi
+            if [ -n "$currentTag" ]; then
+              if [ "$(echo -e "$currentTag\n$preTag" | sort -V | head -n 1)" == "$currentTag" ]; then
+                break
+              fi
+            fi
+            if [ -n "$currentTag" ]; then
+              if [ -n "$tag" ]; then
+                git log --pretty=format:"%B" "$tag..$currentTag" | awk 'NF {print "- " $0} !NF {print ""}' >> release.md
+              else
+                git log --pretty=format:"%B" "$currentTag" | awk 'NF {print "- " $0} !NF {print ""}' >> release.md
+              fi
+              echo "" >> release.md
+            fi
+            currentTag=$tag
+          done
 
-      - name: Publish GitHub Release
+      - name: Release
+        if: ${{ !contains(github.ref, 'beta') }}
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ env.release_notes }}
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          body_path: './release.md'
