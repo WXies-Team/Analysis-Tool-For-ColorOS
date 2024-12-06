@@ -15,12 +15,6 @@ jobs:
         with:
           fetch-depth: 0  # 确保拉取完整历史和标签
 
-      # 配置 Git 提交作者信息
-      - name: Configure Git Author
-        run: |
-          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git config --global user.name "${GITHUB_ACTOR}"
-
       # 获取两个标签之间的提交日志并生成版本说明
       - name: Generate Release Notes
         id: release-notes
@@ -38,18 +32,17 @@ jobs:
             release_notes="## What's Changed\n$(git log --pretty=format:"* %s" "$previousTag..$currentTag")"
           fi
           
-          # 输出生成的版本说明
-          echo "$release_notes"
-
           # 设置输出变量
-          echo "::set-output name=release_notes::$release_notes"
+          echo "release_notes<<EOF" >> $GITHUB_ENV
+          echo "$release_notes" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # 发布 GitHub Release
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ steps.release-notes.outputs.release_notes }}  # 使用生成的版本说明
+          body: ${{ env.release_notes }}  # 使用生成的版本说明
           tag_name: ${{ github.ref_name }}  # 使用当前触发的标签
           name: ${{ github.ref_name }}  # Release 名称设置为当前的标签名
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub token 来发布 Release
