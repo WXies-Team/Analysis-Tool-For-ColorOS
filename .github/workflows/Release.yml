@@ -23,6 +23,7 @@ jobs:
 
       # 获取两个标签之间的提交日志并生成版本说明
       - name: Generate Release Notes
+        id: release-notes
         run: |
           # 获取当前标签
           currentTag=$(git describe --tags --exact-match)
@@ -32,21 +33,23 @@ jobs:
           
           # 如果没有前一个标签，仅显示当前标签的所有提交
           if [ -z "$previousTag" ]; then
-            git log --pretty=format:"- %s" "$currentTag" > release_notes.md
+            release_notes="## What's Changed\n$(git log --pretty=format:"* %s" "$currentTag")"
           else
-            git log --pretty=format:"- %s" "$previousTag..$currentTag" > release_notes.md
+            release_notes="## What's Changed\n$(git log --pretty=format:"* %s" "$previousTag..$currentTag")"
           fi
           
-          echo "Release notes generated:"
-          cat release_notes.md
+          # 输出生成的版本说明
+          echo "$release_notes"
+
+          # 设置输出变量
+          echo "::set-output name=release_notes::$release_notes"
 
       # 发布 GitHub Release
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release_notes.md  # 附加生成的版本说明文件
-          body_path: release_notes.md  # 设置 Release 的内容
+          body: ${{ steps.release-notes.outputs.release_notes }}  # 使用生成的版本说明
           tag_name: ${{ github.ref_name }}  # 使用当前触发的标签
-          name: ${currentTag}  # Release 名称
+          name: ${{ github.ref_name }}  # Release 名称设置为当前的标签名
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
