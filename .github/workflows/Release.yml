@@ -3,19 +3,17 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'  # 仅当推送符合 "v*" 格式的标签时触发
+      - 'v*'
 
 jobs:
   release-notes:
     runs-on: ubuntu-latest
     steps:
-      # 拉取代码
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 确保拉取完整历史和标签
+          fetch-depth: 0
 
-      # 获取两个标签之间的提交日志并生成版本说明
       - name: Generate Release Notes
         id: release-notes
         run: |
@@ -27,9 +25,9 @@ jobs:
           
           # 如果没有前一个标签，仅显示当前标签的所有提交
           if [ -z "$previousTag" ]; then
-            release_notes="## What's Changed\n$(git log --pretty=format:"* %s" "$currentTag")"
+            release_notes="## What's Changed</br>$(git log --pretty=format:"* %s" "$currentTag")"
           else
-            release_notes="## What's Changed\n$(git log --pretty=format:"* %s" "$previousTag..$currentTag")"
+            release_notes="## What's Changed</br>$(git log --pretty=format:"* %s" "$previousTag..$currentTag")"
           fi
           
           # 设置输出变量
@@ -37,12 +35,11 @@ jobs:
           echo "$release_notes" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      # 发布 GitHub Release
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ env.release_notes }}  # 使用生成的版本说明
-          tag_name: ${{ github.ref_name }}  # 使用当前触发的标签
-          name: ${{ github.ref_name }}  # Release 名称设置为当前的标签名
+          body: ${{ env.release_notes }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub token 来发布 Release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
