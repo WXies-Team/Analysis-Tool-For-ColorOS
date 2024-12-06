@@ -25,23 +25,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Download erofs-utils-Linux-x86_64
-      uses: robinraju/release-downloader@v1.10
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
         repository: "WXies-Team/Analysis-Tool-For-ColorOS"
         latest: true
         extract: true
         fileName: "Analysis-Tool-For-ColorOS-Linux-x86_64.zip"
+      
+    - name: Download payload-dumper-go
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: "ssut/payload-dumper-go"
+        latest: true
+        extract: true
+        fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
+
+    - name: Download extract.erofs
+      uses: robinraju/release-downloader@v1.10
+      with:
+        repository: "sekaiacg/erofs-utils"
+        latest: true
+        extract: true
+        fileName: "erofs-utils-*-Linux_x86_64-*.zip"
     
     - name: Install dependence
       run: |
-        cd ./Analysis-Tool-For-ColorOS-Linux-x86_64
         pip install -r requirements.txt
 
     - name: Set permission
       run: |
-       chmod +x ./tools/extract.erofs
-       chmod +x ./tools/payload-dumper-go
+       chmod +x ./extract.erofs
+       chmod +x ./payload-dumper-go
 
     - name: Download ROM
       run: |
