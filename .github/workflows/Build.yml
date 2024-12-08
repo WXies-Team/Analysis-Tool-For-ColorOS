@@ -14,6 +14,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get version
+        run: |
+          VERSION=${GITHUB_REF/refs\/tags\//}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Generate release.md
         run: |
           tags=($(git tag --merged $(git rev-parse HEAD) --sort=-creatordate))
@@ -88,15 +93,15 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-ColorOS-Linux-x86_64.zip" "./Analysis-Tool-For-ColorOS-Linux-x86_64/"
-          mv "./Analysis-Tool-For-ColorOS-Linux-x86_64.zip" output/
+          7z a "./Analysis-Tool-For-ColorOS-Linux-x86_64.zip" "./Analysis-Tool-For-ColorOS-Linux-x86_64/*"
+          mv Analysis-Tool-For-ColorOS-Linux-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-x86_64.zip"
           rm ./*.zip
           rm ./*.tar.gz
 
       - name: Upload action
         uses: actions/upload-artifact@v4
         with:
-          name: Analysis-Tool-For-ColorOS-Linux-x86_64
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Linux-x86_64/*
 
       - name: Download payload-dumper-go-Linux-arm64
@@ -126,17 +131,17 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-ColorOS-Linux-arm64.zip" "./Analysis-Tool-For-ColorOS-Linux-arm64/"
-          mv "./Analysis-Tool-For-ColorOS-Linux-arm64.zip" output/
+          7z a "./Analysis-Tool-For-ColorOS-Linux-arm64.zip" "./Analysis-Tool-For-ColorOS-Linux-arm64/*"
+          mv Analysis-Tool-For-ColorOS-Linux-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-arm64.zip"
           rm ./*.zip
           rm ./*.tar.gz
 
       - name: Upload action
         uses: actions/upload-artifact@v4
         with:
-          name: Analysis-Tool-For-ColorOS-Linux-arm64
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-arm64.zip
           path: ./Analysis-Tool-For-ColorOS-Linux-arm64/*
-          
+
       - name: Download payload-dumper-go-Windows-x86_64
         uses: robinraju/release-downloader@v1.10
         with:
@@ -165,17 +170,17 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-ColorOS-Windows-x86_64" "./Analysis-Tool-For-ColorOS-Windows-x86_64/"
-          mv "./Analysis-Tool-For-ColorOS-Windows-x86_64.zip" output/
+          7z a "./Analysis-Tool-For-ColorOS-Windows-x86_64.zip" "./Analysis-Tool-For-ColorOS-Windows-x86_64/*"
+          mv Analysis-Tool-For-ColorOS-Windows-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Windows-x86_64.zip"
           rm ./*.zip
           rm ./*.tar.gz
 
       - name: Upload action
         uses: actions/upload-artifact@v4
         with:
-          name: Analysis-Tool-For-ColorOS-Windows-x86_64
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Windows-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Windows-x86_64/*
-
+          
       - name: Download payload-dumper-go-Darwin-x86_64
         uses: robinraju/release-downloader@v1.10
         with:
@@ -203,15 +208,15 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-ColorOS-Darwin-x86_64" "./Analysis-Tool-For-ColorOS-Darwin-x86_64/"
-          mv "./Analysis-Tool-For-ColorOS-Darwin-x86_64.zip" output/
+          7z a "./Analysis-Tool-For-ColorOS-Darwin-x86_64.zip" "./Analysis-Tool-For-ColorOS-Darwin-x86_64/*"
+          mv Analysis-Tool-For-ColorOS-Darwin-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-x86_64.zip"
           rm ./*.zip
           rm ./*.tar.gz
 
       - name: Upload action
         uses: actions/upload-artifact@v4
         with:
-          name: Analysis-Tool-For-ColorOS-Darwin-x86_64
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Darwin-x86_64/*
 
       - name: Download payload-dumper-go-Darwin-arm64
@@ -241,16 +246,16 @@ jobs:
             esac
           done
 
-          zip -r "./Analysis-Tool-For-ColorOS-Darwin-arm64" "./Analysis-Tool-For-ColorOS-Darwin-arm64/"
-          mv "./Analysis-Tool-For-ColorOS-Darwin-arm64.zip" output/
+          7z a "./Analysis-Tool-For-ColorOS-Darwin-arm64.zip" "./Analysis-Tool-For-ColorOS-Darwin-arm64/*"
+          mv Analysis-Tool-For-ColorOS-Darwin-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip"
           rm ./*.zip
           rm ./*.tar.gz
 
       - name: Upload action
         uses: actions/upload-artifact@v4
         with:
-          name: Analysis-Tool-For-ColorOS-Darwin-arm64
-          path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip
+          path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/*
 
       - name: Release
         if: ${{ !contains(github.ref, 'beta') }}
