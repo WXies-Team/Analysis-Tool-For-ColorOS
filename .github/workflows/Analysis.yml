@@ -28,23 +28,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Download payload-dumper-go
+    - name: Download dependencies-Linux-x86_64
       uses: robinraju/release-downloader@v1.10
       with:
         repository: "ssut/payload-dumper-go"
         latest: true
         extract: true
         fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-
-    - name: Download extract.erofs
-      uses: robinraju/release-downloader@v1.10
+    - uses: robinraju/release-downloader@v1.10
       with:
         repository: "sekaiacg/erofs-utils"
         latest: true
         extract: true
         fileName: "erofs-utils-*-Linux_x86_64-*.zip"
     
-    - name: Install dependence
+    - name: Move dependencies-Linux-x86_64
       run: |
         mkdir tools
         mv extract.erofs tools/
