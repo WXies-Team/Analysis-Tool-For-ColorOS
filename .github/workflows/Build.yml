@@ -59,12 +59,18 @@ jobs:
           mkdir -p "./Analysis-Tool-For-ColorOS-Linux-x86_64/tools"
           mkdir -p "./Analysis-Tool-For-ColorOS-Darwin-arm64/tools"
           mkdir -p "./Analysis-Tool-For-ColorOS-Darwin-x86_64/tools"
+          mkdir -p "./Analysis-Tool-For-ColorOS-Android-arm64/tools"
+          mkdir -p "./Analysis-Tool-For-ColorOS-Android-x86_64/tools"
+          mkdir -p "./Analysis-Tool-For-ColorOS-WSL-x86_64/tools"
           
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Windows-x86_64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Linux-arm64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Linux-x86_64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Darwin-arm64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Darwin-x86_64/"
+          cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Android-arm64/"
+          cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Android-x86_64/"
+          cp -r ./repo/* "./Analysis-Tool-For-ColorOS-WSL-x86_64/"
 
       - name: Download payload-dumper-go-Linux-x86_64
         uses: robinraju/release-downloader@v1.10
@@ -256,6 +262,120 @@ jobs:
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip
           path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/*
+
+      - name: Download payload-dumper-go-Android-arm64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "ssut/payload-dumper-go"
+          latest: true
+          fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
+
+      - name: Download erofs-utils-Android-arm64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "sekaiacg/erofs-utils"
+          latest: true
+          fileName: "erofs-utils-*-Android_arm64-*.zip"
+
+      - name: Move dependencies-Android-arm64
+        run: |
+          for file in *; do
+            case "$file" in
+              *.zip)
+                unzip -j "$file" "extract.erofs" -d "./Analysis-Tool-For-ColorOS-Android-arm64/tools"
+                ;;
+              *.tar.gz)
+                tar -xzv -C "./Analysis-Tool-For-ColorOS-Android-arm64/tools" -f "$file" "payload-dumper-go"
+                ;;
+            esac
+          done
+
+          7z a "./Analysis-Tool-For-ColorOS-Android-arm64.zip" "./Analysis-Tool-For-ColorOS-Android-arm64/*"
+          mv Analysis-Tool-For-ColorOS-Android-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-arm64.zip"
+          rm ./*.zip
+          rm ./*.tar.gz
+
+      - name: Upload action
+        uses: actions/upload-artifact@v4
+        with:
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-arm64.zip
+          path: ./Analysis-Tool-For-ColorOS-Android-arm64/*
+
+      - name: Download payload-dumper-go-Android-x86_64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "ssut/payload-dumper-go"
+          latest: true
+          fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
+
+      - name: Download erofs-utils-Android-x86_64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "sekaiacg/erofs-utils"
+          latest: true
+          fileName: "erofs-utils-*-Android_x86_64-*.zip"
+
+      - name: Move dependencies-Android-x86_64
+        run: |
+          for file in *; do
+            case "$file" in
+              *.zip)
+                unzip -j "$file" "extract.erofs" -d "./Analysis-Tool-For-ColorOS-Android-x86_64/tools"
+                ;;
+              *.tar.gz)
+                tar -xzv -C "./Analysis-Tool-For-ColorOS-Android-x86_64/tools" -f "$file" "payload-dumper-go"
+                ;;
+            esac
+          done
+
+          7z a "./Analysis-Tool-For-ColorOS-Android-x86_64.zip" "./Analysis-Tool-For-ColorOS-Android-x86_64/*"
+          mv Analysis-Tool-For-ColorOS-Android-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-x86_64.zip"
+          rm ./*.zip
+          rm ./*.tar.gz
+
+      - name: Upload action
+        uses: actions/upload-artifact@v4
+        with:
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-x86_64.zip
+          path: ./Analysis-Tool-For-ColorOS-Android-x86_64/*
+
+      - name: Download payload-dumper-go-WSL-x86_64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "ssut/payload-dumper-go"
+          latest: true
+          fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
+
+      - name: Download erofs-utils-WSL-x86_64
+        uses: robinraju/release-downloader@v1.10
+        with:
+          repository: "sekaiacg/erofs-utils"
+          latest: true
+          fileName: "erofs-utils-*-WSL_x86_64-*.zip"
+
+      - name: Move dependencies-WSL-x86_64
+        run: |
+          for file in *; do
+            case "$file" in
+              *.zip)
+                unzip -j "$file" "extract.erofs" -d "./Analysis-Tool-For-ColorOS-WSL-x86_64/tools"
+                ;;
+              *.tar.gz)
+                tar -xzv -C "./Analysis-Tool-For-ColorOS-WSL-x86_64/tools" -f "$file" "payload-dumper-go"
+                ;;
+            esac
+          done
+
+          7z a "./Analysis-Tool-For-ColorOS-WSL-x86_64.zip" "./Analysis-Tool-For-ColorOS-WSL-x86_64/*"
+          mv Analysis-Tool-For-ColorOS-WSL-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip"
+          rm ./*.zip
+          rm ./*.tar.gz
+
+      - name: Upload action
+        uses: actions/upload-artifact@v4
+        with:
+          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip
+          path: ./Analysis-Tool-For-ColorOS-WSL-x86_64/*
 
       - name: Release
         if: ${{ !contains(github.ref, 'beta') }}
