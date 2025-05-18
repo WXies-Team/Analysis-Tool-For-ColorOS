@@ -3,7 +3,6 @@ android_framework_res_overlay.display.product.20828.apk
 android_framework_res_overlay.display.product.22825.apk
 AndroidPlatformServices.apk
 aon_framework_res_overlay.display.product.apk
-AONService.apk
 ARCore.apk
 AtciService.apk
 atfwd.apk
@@ -148,7 +147,6 @@ SoterService.apk
 Stk.apk
 StorageManager.apk
 SubsystemApp.apk
-SwitchAccess.apk
 SystemHelper_realme_20230905.apk
 SystemHelper-allnet-OnePlus.apk
 SystemHelper-oppo-20221223.apk
@@ -185,3 +183,19 @@ WifiBackupRestore.apk
 workloadclassifier.apk
 xrcbservice.apk
 xrvdservice.apk
+talkback.apk
+AndroidAutoStubCN.apk
+NewCallSdk.apk
+TTSatelliteAuth.apk
+RsmcSatelliteAuth.apk
+NfcEngineerTest.apk
+SubsysPlugins_plugin_AppSense.apk
+SubsysPlugins_plugin_WifiQoe.apk
+SubsysPlugins_plugin_MotionSense.apk
+SubsysPlugins_plugin_CellMap.apk
+SubsysPlugins_plugin_BorderPreSearch.apk
+OplusMediaController.apk
+OplusFlexibleWindowUI.apk
+NtnSatApp.apk
+xrwifiservice.apk
+Xpan.apk
