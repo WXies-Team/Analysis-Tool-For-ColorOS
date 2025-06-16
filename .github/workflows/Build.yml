@@ -368,12 +368,3 @@ jobs:
           body_path: './release.md'
           files: ./output/*
           token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Upload Drive Center
-        if: ${{ !contains(github.ref, 'beta') }}
-        run: |
-          FOLDER="${{ secrets.DRIVE_CENTER_ADDR_WEBDAV }}/Analysis-Tool-For-ColorOS/${{ env.VERSION }}"
-          curl -u ${{ secrets.DRIVE_CENTER_RELEASE_USER }}:${{ secrets.DRIVE_CENTER_RELEASE_TOKEN }} -X MKCOL "$FOLDER/" || true
-          for file in ./output/*; do
-            curl -T "$file" -u ${{ secrets.DRIVE_CENTER_RELEASE_USER }}:${{ secrets.DRIVE_CENTER_RELEASE_TOKEN }} "$FOLDER/$(basename "$file")"
-          done
