@@ -1,9 +1,35 @@
 name: Build
 
+# 路径过滤只对分支 push 生效，**不评估 tag push**（GitHub 官方：Path filters are not
+# evaluated for pushes of tags），所以 Beta/Stable Tag 一定触发，强制规则 18/20 不受影响。
+# 混合 push 只要有一个文件不在忽略列表内就照常触发；diff 生成超限/超 1000 commit 时也会强制跑。
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
+    # workflow 自身与文档改动不触发打包（Dependabot 升级 actions、README 更新不白跑）
+    # tag 触发不受 paths 过滤影响（GitHub 不对 tag push 评估路径过滤）
+    paths-ignore:
+      # 纯文档：不产出任何字节差异，白跑一次全量打包只占 runner。
+      # 这些 commit 会留在「上次成功构建..HEAD」区间里，但 release-log.sh
+      # 本来就过滤 docs|chore|ci|test|style|build 类型，日志不受影响——
+      # 因此文档类改动请一律用 `docs:` 前缀提交，否则会被写进更新日志。
+      - 'docs/**'
+      - '*.md'
+      - '**/*.md'
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read   # alpha 日志区间需查询本工作流历史成功 run（§10.1）
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   Build:
@@ -14,37 +40,82 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get version
+      # 统一计算 Channel / Version Name / Build ID（Version Code = Build ID），
+      # 直接写入 GITHUB_ENV 供本 job 全部后续步骤使用
+      - name: Determine channel and version
         run: |
-          VERSION=${GITHUB_REF/refs\/tags\//}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Generate release.md
-        run: |
-          tags=($(git tag --merged $(git rev-parse HEAD) --sort=-creatordate))
-          preTag=$(curl --silent "https://api.github.com/repos/WXies-Team/Analysis-Tool-For-ColorOS/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")' || echo "")
-          currentTag=""
-          for ((i = 0; i <= ${#tags[@]}; i++)); do
-            if (( i < ${#tags[@]} )); then
-              tag=${tags[$i]}
+          set -euo pipefail
+          BUILD_ID=${{ github.run_number }}
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+              echo "非法 tag: $TAG，只允许 x.y.z 或 x.y.z-beta.N（禁止 v 前缀等额外前后缀）"
+              exit 1
+            fi
+            if [[ "$TAG" == *-beta.* ]]; then
+              CHANNEL=beta
             else
-              tag=""
+              CHANNEL=stable
             fi
-            if [ -n "$currentTag" ]; then
-              if [ "$(echo -e "$currentTag\n$preTag" | sort -V | head -n 1)" == "$currentTag" ]; then
-                break
-              fi
+            VERSION="$TAG"
+          else
+            CHANNEL=alpha
+            TARGET=$(tr -d '[:space:]' < VERSION)
+            if [[ ! "$TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "VERSION 文件格式错误: '$TARGET'，应为 MAJOR.MINOR.PATCH"
+              exit 1
             fi
-            if [ -n "$currentTag" ]; then
-              if [ -n "$tag" ]; then
-                git log --pretty=format:"%B" "$tag..$currentTag" | awk 'NF {print "- " $0} !NF {print ""}' >> release.md
-              else
-                git log --pretty=format:"%B" "$currentTag" | awk 'NF {print "- " $0} !NF {print ""}' >> release.md
-              fi
-              echo "" >> release.md
+            VERSION="$TARGET-alpha.$BUILD_ID"
+          fi
+          {
+            echo "CHANNEL=$CHANNEL"
+            echo "BUILD_ID=$BUILD_ID"
+            echo "VERSION_CODE=$BUILD_ID"
+            echo "VERSION=$VERSION"
+          } >> "$GITHUB_ENV"
+          echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
+
+      # 日志范围按 channel 分段（§10.1/§12.1/§15.1）：
+      #   alpha  → 上一次成功构建的 commit .. 当前（alpha 不打 tag，经 Actions API 取上个成功 run）
+      #   beta   → 上一个 Beta Tag .. 当前 Tag（无更早 Beta 则回退最近任意 Tag）
+      #   stable → 上一个 Stable Tag .. 当前 Tag（同上回退）
+      # 生成双文件（模板与示例见 §26）：
+      #   release.md   → OpenList README / GitHub Release notes（Markdown）
+      #   changelog.txt → version.json（纯文本无版本头）
+      - name: Generate release log
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENLIST_BASE_URL: https://storage.horatio.cn/Analysis-Tool-For-ColorOS
+        run: |
+          set -euo pipefail
+          if [ "$CHANNEL" = "alpha" ]; then
+            PREV=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/Build.yml/runs?branch=${GITHUB_REF_NAME}&status=success&per_page=20" \
+              --jq ".workflow_runs | map(select(.id != ${GITHUB_RUN_ID} and .head_sha != \"${GITHUB_SHA}\")) | .[0].head_sha // empty" || true)
+          else
+            if [ "$CHANNEL" = "beta" ]; then
+              PATTERN='^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$'
+            else
+              PATTERN='^[0-9]+\.[0-9]+\.[0-9]+$'
             fi
-            currentTag=$tag
-          done
+            PREV=$(git tag --sort=-creatordate --merged HEAD | grep -Fxv "$VERSION" | grep -E "$PATTERN" | head -n 1 || true)
+            if [ -z "$PREV" ]; then
+              PREV=$(git tag --sort=-creatordate --merged HEAD | grep -Fxv "$VERSION" | head -n 1 || true)
+            fi
+          fi
+          if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
+          bash ci/release-log.sh "$RANGE"
+          echo "===== release.md ====="
+          cat release.md
+          echo "===== changelog.txt ====="
+          cat changelog.txt
+
+      - name: Upload release log
+        uses: actions/upload-artifact@v7
+        with:
+          name: Release-Log-${{ env.VERSION }}
+          path: |
+            release.md
+            changelog.txt
 
       - name: Checkout code into separate directory
         uses: actions/checkout@v7
@@ -361,10 +432,27 @@ jobs:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-WSL-x86_64/*
 
+      # 上传至 OpenList 存储目录并按通道执行旧版本清理策略（脚本全文见 §27.8）
+      # Alpha 也上传（alpha 不建 GitHub Release，OpenList 是它唯一的分发出口）
+      - name: Deploy to OpenList
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
+          ARTIFACT_DIR: output
+        run: bash ci/upload-openlist.sh
+
+      # Beta/Stable：Tag 触发时附带发布 GitHub Release（notes = release.md，Markdown）
+      # 顺序固定：先 Deploy（清理）→ 再 Create Release（§29 不变量 5）
       - name: Release
-        if: ${{ !contains(github.ref, 'beta') }}
+        if: env.CHANNEL != 'alpha'
         uses: softprops/action-gh-release@v3
         with:
+          name: ${{ env.VERSION }}
           body_path: './release.md'
           files: ./output/*
+          fail_on_unmatched_files: true
+          prerelease: ${{ env.CHANNEL == 'beta' }}
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,108 @@
+name: rollback-openlist
+
+# 撤回已发布的版本：把 OpenList 某通道的指针（version.json / README.md）回滚到指定版本，
+# 并删除被撤回的版本目录。OpenList 存储在另一台机器、SSH 凭据只存在于 Actions secrets，
+# 因此回滚只能经由本 workflow 执行。
+#
+# 版本目录的恢复顺序（关键，避免撤回后下载 404）：
+#   1. 「以前的版本/<SNAP>」存在 → 整目录 mv 回通道根（CI 原件含产物，优先级最高）。
+#   2. 通道根已有该版本且含产物 → 跳过，不重建。
+#   3. 两者皆无 → 无法恢复，明确报错。
+#   4. 通道级 version.json / README.md **始终从恢复后的版本目录拷贝**，
+#      保证指针与原件逐字一致、download_url 指向的产物真实存在。
+#   5. 删除被撤回版本时，通道根与「以前的版本」两处一并删，避免残留重复目录。
+#
+# 用法：workflow_dispatch
+#   target_version 要恢复的目标版本目录名（如 2.1.0，必填）
+#   channel        通道（beta / stable / alpha）
+#   drop_version   要删除的版本目录名；留空则不删
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: '通道'
+        required: true
+        default: 'beta'
+      target_version:
+        description: '要恢复的目标版本目录名（如 2.1.0）'
+        required: true
+      drop_version:
+        description: '要删除的版本目录名（留空不删）'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rollback-${{ github.ref }}
+
+jobs:
+  rollback:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 推送到 OpenList
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          # 路径收敛进 secret，不留在源码里；缺失时下方校验直接失败。
+          OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
+          CHANNEL: ${{ inputs.channel }}
+          TARGET_VERSION: ${{ inputs.target_version }}
+          DROP_VERSION: ${{ inputs.drop_version }}
+        run: |
+          set -euo pipefail
+          : "${OPENLIST_STORAGE_DIR:?OPENLIST_STORAGE_DIR is required}"
+          BASE_STORAGE="$OPENLIST_STORAGE_DIR/Analysis-Tool-For-ColorOS"
+          TARGET_DIR="$BASE_STORAGE/$CHANNEL"
+          ARCHIVE_DIR="$TARGET_DIR/以前的版本"
+          KEY="$RUNNER_TEMP/openlist_key"
+          install -m 600 /dev/null "$KEY"
+          printf '%s\n' "$SERVER_SSH_KEY" > "$KEY"
+          trap 'rm -f "$KEY"' EXIT
+          SSH_OPTS=(-i "$KEY" -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new -o BatchMode=yes)
+          run_ssh() { ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" "bash -c $(printf '%q' "$1")"; }
+          run_scp() { scp -i "$KEY" -P "$SSH_PORT" -o StrictHostKeyChecking=accept-new -o BatchMode=yes "$@"; }
+
+          SNAP_VERSION="$TARGET_VERSION"
+          [ -n "$SNAP_VERSION" ] || { echo "::error::缺少 target_version"; exit 1; }
+
+          echo "== [Rollback] 目标版本: $SNAP_VERSION / 通道: $CHANNEL =="
+
+          # 1) 恢复版本目录：归档原件优先（含产物）
+          cat <<'EOS' > "$RUNNER_TEMP/restore.sh"
+          set -euo pipefail
+          TARGET_DIR="$1"; ARCHIVE_DIR="$2"; SNAP="$3"
+          SNAPDIR="$TARGET_DIR/$SNAP"
+          ARCHIVED="$ARCHIVE_DIR/$SNAP"
+          if [ -d "$ARCHIVED" ]; then
+            echo "[restore] 从归档恢复: 以前的版本/$SNAP -> $SNAP"
+            rm -rf "$SNAPDIR"
+            mv "$ARCHIVED" "$SNAPDIR"
+          elif [ -f "$SNAPDIR/version.json" ] && [ -n "$(ls -A "$SNAPDIR"/*.zip 2>/dev/null)" ]; then
+            echo "[restore] 通道根已有完整版本目录，跳过"
+          else
+            echo "::error::归档与通道根都没有 $SNAP，无法回滚"; exit 1
+          fi
+          # 2) 通道指针一律以恢复后的版本目录为准（原件优先）
+          test -f "$SNAPDIR/version.json" || { echo "::error::恢复后的版本目录缺 version.json"; exit 1; }
+          test -f "$SNAPDIR/README.md"   || { echo "::error::恢复后的版本目录缺 README.md"; exit 1; }
+          cp "$SNAPDIR/version.json" "$TARGET_DIR/version.json"
+          cp "$SNAPDIR/README.md"   "$TARGET_DIR/README.md"
+          # 3) 清理归档里可能残留的同名目录，杜绝同一版本双份
+          rm -rf "$ARCHIVED"
+          echo "[restore] 完成"
+          EOS
+          run_ssh "bash -s -- '$TARGET_DIR' '$ARCHIVE_DIR' '$SNAP_VERSION'" < "$RUNNER_TEMP/restore.sh"
+
+          # 4) 删除被撤回版本：通道根与归档两处一起
+          if [ -n "$DROP_VERSION" ] && [ "$DROP_VERSION" != "$SNAP_VERSION" ]; then
+            echo "== [Rollback] 删除版本目录: $DROP_VERSION（通道根 + 归档） =="
+            run_ssh "rm -rf '$TARGET_DIR/$DROP_VERSION' '$ARCHIVE_DIR/$DROP_VERSION'"
+          fi
+          echo "== [Rollback] 完成 =="
