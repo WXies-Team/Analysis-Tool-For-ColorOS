@@ -1,7 +1,7 @@
 name: backfill-openlist
 
 # 把**已存在的 GitHub Release 产物**补传到 OpenList（历史版本回填 / 指针修复用）。
-# 常规发版走 Build.yml 的 Deploy to OpenList，本 workflow 只处理「Release 早已存在、
+# 常规发版走 build.yml 的 Deploy to OpenList，本 workflow 只处理「Release 早已存在、
 # 但 OpenList 上没有」或「需要重传」的情况——它不重新构建，只搬运。
 #
 # 用法：workflow_dispatch

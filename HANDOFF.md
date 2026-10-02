@@ -56,13 +56,13 @@ Run log 里 `release.md` 分组是否合理 → OpenList 三通道目录与 `ver
 3. **`docs/**`、`*.md` 被 paths-ignore**：纯文档 push 不占 runner，日志区间不受影响 —— 所以文档提交必须用 `docs:` 前缀；
 4. **日志双文件**：`release.md`（带版本大标题，给 OpenList/GitHub 渲染）+ `changelog.txt`（纯文本，进 `version.json`）；
 5. **保留 1/2/3 + 归档**：超期版本物理删除，Release notes **不加任何失效提示**（废弃标记机制已移除，§27.7）；
-6. **产物名即对外契约**：`<名字>-<版本>-<平台>-<arch>.zip` 三处（output/、Release asset、OpenList）必须逐字一致，历史不改名。
+6. **产物名即对外契约**：`<名字>-<版本>-<BUILD_ID>-<平台>-<arch>.zip` 三处（output/、Release asset、OpenList）必须逐字一致，历史不改名。
 
 ## 6. 已知坑
 
 1. **外部依赖 500**：见 §3，重跑即可；
 2. **本仓历史 tag 曾是 `v2.0.3.0` 四段格式**：已在本轮规范化为 `x.y.z`；新 tag 必须走 `x.y.z` / `x.y.z-beta.N`，否则 `Determine channel and version` 直接失败；
-3. **workflow 文件名不能随手改**：`Build.yml` 被 `Generate release log` 的 Actions API 路径引用（alpha 日志区间靠它），改名必须同步 §28/§29；
+3. **workflow 文件名不能随手改**：`build.yml` 被 `Generate release log` 的 Actions API 路径引用（alpha 日志区间靠它），改名必须同步 §28/§29；
 4. **同一 `version_name` 换 Build ID**：撤回不释放 Build ID，撤回 `beta.2` 后下次必须发 `beta.3`；
 5. **self-hosted 工作区跨 run 保留**：本地跑脚本验证时注意 `output/` 可能有上次残留。
 

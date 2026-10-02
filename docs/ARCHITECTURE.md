@@ -21,21 +21,22 @@ Analysis-Tool-For-ColorOS/
 │   ├── release-log.sh      # Release Log 双文件生成（release.md + changelog.txt，Conventional Commits 分类）
 │   └── upload-openlist.sh  # 产物/README/version.json 上传 OpenList + 版本归档清理
 └── .github/workflows/
-    ├── Build.yml           # 发版：push/tag → 版本计算 → 日志 → 8 平台打包 → OpenList → Release
+    ├── build.yml           # 发版：push/tag → 版本计算 → 日志 → 8 平台打包 → OpenList → Release
     ├── Analysis.yml        # 手动 ROM 分析（workflow_dispatch），在当前分支上跑
     └── rollback-openlist.yml # 撤回已发布版本（OpenList 通道指针回滚）
 ```
 
 ## 2. 两条流水线
 
-### Build.yml（push / tag / 手动，见 `docs/VERSIONING.md` §17）
+### build.yml（push / tag / 手动，见 `docs/VERSIONING.md` §17）
 
 ```text
 Determine channel and version      # push→alpha（VERSION+run_number）/ tag→beta|stable
 Generate release log               # 按通道算日志区间 → ci/release-log.sh → release.md + changelog.txt
 Process + Download dependencies    # 组装 8 个平台目录，逐平台注入 payload-dumper-go / erofs-utils
-7z 打包 → output/<名字>-<版本>-<平台>-<arch>.zip
+7z 打包 → output/<名字>-<版本>-<BUILD_ID>-<平台>-<arch>.zip
 Deploy to OpenList                 # ci/upload-openlist.sh（三通道全传，含 alpha）
+Create GitHub Release（仅 tag）     # notes=release.md，产物同名 zip
 Release（仅 beta/stable）          # files=./output/*，notes=release.md
 ```
 

@@ -1,25 +1,21 @@
-name: Build
+name: build
 
 # 路径过滤只对分支 push 生效，**不评估 tag push**（GitHub 官方：Path filters are not
 # evaluated for pushes of tags），所以 Beta/Stable Tag 一定触发，强制规则 18/20 不受影响。
 # 混合 push 只要有一个文件不在忽略列表内就照常触发；diff 生成超限/超 1000 commit 时也会强制跑。
 on:
   push:
-    branches:
-      - main
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
-    # workflow 自身与文档改动不触发打包（Dependabot 升级 actions、README 更新不白跑）
-    # tag 触发不受 paths 过滤影响（GitHub 不对 tag push 评估路径过滤）
+    branches: [main]
+    tags: ['*']
     paths-ignore:
-      # 纯文档：不产出任何字节差异，白跑一次全量打包只占 runner。
+      # 纯文档：不产出任何字节差异，白跑一次全量测试+打包只占 runner。
       # 这些 commit 会留在「上次成功构建..HEAD」区间里，但 release-log.sh
       # 本来就过滤 docs|chore|ci|test|style|build 类型，日志不受影响——
       # 因此文档类改动请一律用 `docs:` 前缀提交，否则会被写进更新日志。
       - 'docs/**'
       - '*.md'
       - '**/*.md'
+      # workflow 自身/CI 配置改动不影响构建产物（Dependabot 升级 actions 等不触发）
       - '.github/**'
   workflow_dispatch:
 
@@ -32,16 +28,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Build:
+  build:
     runs-on: self-hosted
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # 统一计算 Channel / Version Name / Build ID（Version Code = Build ID），
-      # 直接写入 GITHUB_ENV 供本 job 全部后续步骤使用
+      # 直接写入 GITHUB_ENV 供本 job 全部后续步骤使用（无需独立 job，省一次全历史 clone）
       - name: Determine channel and version
         run: |
           set -euo pipefail
@@ -52,26 +47,22 @@ jobs:
               echo "非法 tag: $TAG，只允许 x.y.z 或 x.y.z-beta.N（禁止 v 前缀等额外前后缀）"
               exit 1
             fi
-            if [[ "$TAG" == *-beta.* ]]; then
-              CHANNEL=beta
-            else
-              CHANNEL=stable
-            fi
+            if [[ "$TAG" == *-beta.* ]]; then CHANNEL=beta; else CHANNEL=stable; fi
             VERSION="$TAG"
           else
             CHANNEL=alpha
-            TARGET=$(tr -d '[:space:]' < VERSION)
-            if [[ ! "$TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "VERSION 文件格式错误: '$TARGET'，应为 MAJOR.MINOR.PATCH"
+            BASE=$(tr -d '[:space:]' < VERSION)
+            if [[ ! "$BASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "VERSION 文件格式错误: '$BASE'，应为 MAJOR.MINOR.PATCH"
               exit 1
             fi
-            VERSION="$TARGET-alpha.$BUILD_ID"
+            VERSION="$BASE-alpha.$BUILD_ID"
           fi
           {
             echo "CHANNEL=$CHANNEL"
+            echo "VERSION=$VERSION"
             echo "BUILD_ID=$BUILD_ID"
             echo "VERSION_CODE=$BUILD_ID"
-            echo "VERSION=$VERSION"
           } >> "$GITHUB_ENV"
           echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
 
@@ -89,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$CHANNEL" = "alpha" ]; then
-            PREV=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/Build.yml/runs?branch=${GITHUB_REF_NAME}&status=success&per_page=20" \
+            PREV=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/build.yml/runs?branch=${GITHUB_REF_NAME}&status=success&per_page=20" \
               --jq ".workflow_runs | map(select(.id != ${GITHUB_RUN_ID} and .head_sha != \"${GITHUB_SHA}\")) | .[0].head_sha // empty" || true)
           else
             if [ "$CHANNEL" = "beta" ]; then
@@ -109,14 +100,6 @@ jobs:
           echo "===== changelog.txt ====="
           cat changelog.txt
 
-      - name: Upload release log
-        uses: actions/upload-artifact@v7
-        with:
-          name: Release-Log-${{ env.VERSION }}
-          path: |
-            release.md
-            changelog.txt
-
       - name: Checkout code into separate directory
         uses: actions/checkout@v7
         with:
@@ -133,7 +116,7 @@ jobs:
           mkdir -p "./Analysis-Tool-For-ColorOS-Android-arm64/tools"
           mkdir -p "./Analysis-Tool-For-ColorOS-Android-x86_64/tools"
           mkdir -p "./Analysis-Tool-For-ColorOS-WSL-x86_64/tools"
-          
+
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Windows-x86_64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Linux-arm64/"
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-Linux-x86_64/"
@@ -169,15 +152,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Linux-x86_64.zip" "./Analysis-Tool-For-ColorOS-Linux-x86_64/*"
-          mv Analysis-Tool-For-ColorOS-Linux-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-x86_64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Linux-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-x86_64.zip
-          path: ./Analysis-Tool-For-ColorOS-Linux-x86_64/*
+          mv Analysis-Tool-For-ColorOS-Linux-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Linux-x86_64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download dependencies-Linux-arm64
         uses: robinraju/release-downloader@v1.13
@@ -205,15 +182,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Linux-arm64.zip" "./Analysis-Tool-For-ColorOS-Linux-arm64/*"
-          mv Analysis-Tool-For-ColorOS-Linux-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-arm64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Linux-arm64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-arm64.zip
-          path: ./Analysis-Tool-For-ColorOS-Linux-arm64/*
+          mv Analysis-Tool-For-ColorOS-Linux-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Linux-arm64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download dependencies-Windows-x86_64
         uses: robinraju/release-downloader@v1.13
@@ -242,16 +213,10 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Windows-x86_64.zip" "./Analysis-Tool-For-ColorOS-Windows-x86_64/*"
-          mv Analysis-Tool-For-ColorOS-Windows-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Windows-x86_64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
+          mv Analysis-Tool-For-ColorOS-Windows-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Windows-x86_64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
-      - name: Upload artifact-Windows-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Windows-x86_64.zip
-          path: ./Analysis-Tool-For-ColorOS-Windows-x86_64/*
-          
       - name: Download payload-dumper-go-Darwin-x86_64
         uses: robinraju/release-downloader@v1.13
         with:
@@ -278,15 +243,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Darwin-x86_64.zip" "./Analysis-Tool-For-ColorOS-Darwin-x86_64/*"
-          mv Analysis-Tool-For-ColorOS-Darwin-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-x86_64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Darwin-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-x86_64.zip
-          path: ./Analysis-Tool-For-ColorOS-Darwin-x86_64/*
+          mv Analysis-Tool-For-ColorOS-Darwin-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Darwin-x86_64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Darwin-arm64
         uses: robinraju/release-downloader@v1.13
@@ -314,15 +273,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Darwin-arm64.zip" "./Analysis-Tool-For-ColorOS-Darwin-arm64/*"
-          mv Analysis-Tool-For-ColorOS-Darwin-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Darwin-arm64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip
-          path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/*
+          mv Analysis-Tool-For-ColorOS-Darwin-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Darwin-arm64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Android-arm64
         uses: robinraju/release-downloader@v1.13
@@ -350,15 +303,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Android-arm64.zip" "./Analysis-Tool-For-ColorOS-Android-arm64/*"
-          mv Analysis-Tool-For-ColorOS-Android-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-arm64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Android-arm64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-arm64.zip
-          path: ./Analysis-Tool-For-ColorOS-Android-arm64/*
+          mv Analysis-Tool-For-ColorOS-Android-arm64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Android-arm64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Android-x86_64
         uses: robinraju/release-downloader@v1.13
@@ -386,15 +333,9 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-Android-x86_64.zip" "./Analysis-Tool-For-ColorOS-Android-x86_64/*"
-          mv Analysis-Tool-For-ColorOS-Android-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-x86_64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-Android-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-x86_64.zip
-          path: ./Analysis-Tool-For-ColorOS-Android-x86_64/*
+          mv Analysis-Tool-For-ColorOS-Android-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-Android-x86_64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-WSL-x86_64
         uses: robinraju/release-downloader@v1.13
@@ -422,18 +363,11 @@ jobs:
           done
 
           7z a "./Analysis-Tool-For-ColorOS-WSL-x86_64.zip" "./Analysis-Tool-For-ColorOS-WSL-x86_64/*"
-          mv Analysis-Tool-For-ColorOS-WSL-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip"
-          rm ./*.zip
-          rm ./*.tar.gz
-
-      - name: Upload artifact-WSL-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip
-          path: ./Analysis-Tool-For-ColorOS-WSL-x86_64/*
+          mv Analysis-Tool-For-ColorOS-WSL-x86_64.zip "output/Analysis-Tool-For-ColorOS-${{ env.VERSION }}-${{ env.BUILD_ID }}-WSL-x86_64.zip"
+          rm -f ./*.zip
+          rm -f ./*.tar.gz
 
       # 上传至 OpenList 存储目录并按通道执行旧版本清理策略（脚本全文见 §27.8）
-      # Alpha 也上传（alpha 不建 GitHub Release，OpenList 是它唯一的分发出口）
       - name: Deploy to OpenList
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
@@ -441,18 +375,16 @@ jobs:
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_PORT: ${{ vars.SSH_PORT || '22' }}
           OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
-          ARTIFACT_DIR: output
         run: bash ci/upload-openlist.sh
 
       # Beta/Stable：Tag 触发时附带发布 GitHub Release（notes = release.md，Markdown）
-      # 顺序固定：先 Deploy（清理）→ 再 Create Release（§29 不变量 5）
-      - name: Release
-        if: env.CHANNEL != 'alpha'
-        uses: softprops/action-gh-release@v3
-        with:
-          name: ${{ env.VERSION }}
-          body_path: './release.md'
-          files: ./output/*
-          fail_on_unmatched_files: true
-          prerelease: ${{ env.CHANNEL == 'beta' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ARGS=(create "$VERSION" --title "$VERSION" --notes-file release.md)
+          if [ "$CHANNEL" = "beta" ]; then ARGS+=(--prerelease); fi
+          mapfile -t FILES < <(ls output/Analysis-Tool-For-ColorOS-"$VERSION"-"$BUILD_ID"-*.zip)
+          gh release "${ARGS[@]}" "${FILES[@]}"

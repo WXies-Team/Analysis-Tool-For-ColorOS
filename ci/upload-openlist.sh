@@ -69,7 +69,7 @@ fi
 # 2.5 生成并上传 version.json 元数据（供网页 / 检查更新直接拉取）
 echo "== [OpenList] 生成 version.json =="
 VERSION_JSON_TMP="$RUNNER_TEMP/version.json"
-FILE_NAME="$ARTIFACT_PREFIX-$VERSION-$PRIMARY_ARTIFACT.zip"
+FILE_NAME="$ARTIFACT_PREFIX-$VERSION-$BUILD_ID-$PRIMARY_ARTIFACT.zip"
 DOWNLOAD_URL="https://storage.horatio.cn/Analysis-Tool-For-ColorOS/$CHANNEL/$VERSION/$FILE_NAME"
 
 # changelog 优先取纯文本 changelog.txt（避免与日志开头重复）；
