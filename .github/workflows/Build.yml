@@ -363,7 +363,7 @@ jobs:
 
       - name: Release
         if: ${{ !contains(github.ref, 'beta') }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: './release.md'
           files: ./output/*
