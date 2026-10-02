@@ -2610,6 +2610,7 @@ jobs:
           SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
           SSH_PORT: ${{ vars.SSH_PORT || '22' }}
           OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
+          ARTIFACT_DIR: output
         run: bash ci/upload-openlist.sh
 
       # Beta/Stable：Tag 触发时附带发布 GitHub Release（notes = release.md，Markdown）
