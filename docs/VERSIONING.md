@@ -1896,6 +1896,9 @@ run_ssh "if [ -d '$OPENLIST_STORAGE_DIR/storage' ]; then rm -rf '$OPENLIST_STORA
 
 # 1. 上传构建产物至版本号文件夹
 echo "== [OpenList] 上传构建产物至 $VERSION_DIR =="
+# 版本目录由 CI 独占：先清掉该目录下已有的 zip（历史命名、重传残留），
+# 保证目录内容与本次产物逐字一致——否则改名/重跑会出现新旧两套文件。
+run_ssh "rm -f '$VERSION_DIR'/*.zip"
 mapfile -t ARTIFACTS < <(ls "$ARTIFACT_DIR/$ARTIFACT_PREFIX-$VERSION"-*.zip 2>/dev/null || true)
 if [ "${#ARTIFACTS[@]}" -eq 0 ]; then
   echo "::error::未找到待上传的产物: $ARTIFACT_DIR/$ARTIFACT_PREFIX-$VERSION-*.zip"
