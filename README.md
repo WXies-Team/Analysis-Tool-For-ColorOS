@@ -15,17 +15,23 @@
 - 删除多余文件
 - 获取包信息
 
+## ⬇️ 下载
+
+三通道托管在自建 OpenList，各通道独立保留最新版本：
+
+| 通道 | 适合谁 | 下载 |
+| --- | --- | --- |
+| 📁 **内测版 Alpha** | 想第一时间尝鲜（每次 push 自动构建） | [alpha/](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/alpha/) |
+| 📁 公测版 Beta | 想体验候选功能、帮忙挑毛病 | [beta/](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/beta/) · [GitHub Releases](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases) |
+| 📁 **正式版 Stable** | 日常使用，稳定优先（推荐） | [stable/](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/stable/) · [GitHub Releases](https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases) |
+
+- 每个版本目录都附有这次更新了什么（CI 自动生成的更新说明）
+- 压缩包内已自带 `tools/` 依赖（payload-dumper-go、extract.erofs），解压即用
+- 下载中心首页：[storage.horatio.cn/Analysis-Tool-For-ColorOS](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/)
+
 ## 如何使用
 
-1. 下载对应平台的压缩包（二选一）：
-
-   - **下载中心（推荐，含内测/公测通道）**：<https://storage.horatio.cn/Analysis-Tool-For-ColorOS/>
-     - [正式版 stable](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/stable/)
-     - [公测版 beta](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/beta/)
-     - [内测版 alpha](https://storage.horatio.cn/Analysis-Tool-For-ColorOS/alpha/)（每次 push 自动构建）
-   - **GitHub Release**（仅正式版 / 公测版）：<https://github.com/WXies-Team/Analysis-Tool-For-ColorOS/releases>
-
-   压缩包内已自带 `tools/` 依赖（payload-dumper-go、extract.erofs），解压即用。
+1. 在上面的表格里挑一个通道，下载对应平台的 zip；
    
 2. 确保已安装 Python 3.x, aria2c, 7zip 并安装依赖库：
 
