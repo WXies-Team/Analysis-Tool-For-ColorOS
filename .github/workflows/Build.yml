@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -47,7 +47,7 @@ jobs:
           done
 
       - name: Checkout code into separate directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: 'repo'
 
