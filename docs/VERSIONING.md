@@ -2385,7 +2385,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Linux_x86_64-*.zip"
+          fileName: "erofs-utils-*Linux_x86_64*.zip"
 
       - name: Move dependencies-Linux-x86_64
         run: |
@@ -2421,7 +2421,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Linux_aarch64-*.zip"
+          fileName: "erofs-utils-*Linux_aarch64*.zip"
 
       - name: Move dependencies-Linux-arm64
         run: |
@@ -2457,7 +2457,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Cygwin_x86_64-*.zip"
+          fileName: "erofs-utils-*Cygwin_x86_64*.zip"
 
       - name: Move dependencies-Windows-x86_64
         run: |
@@ -2494,7 +2494,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Darwin_x86_64-*.zip"
+          fileName: "erofs-utils-*Darwin_x86_64*.zip"
 
       - name: Move dependencies-Darwin-x86_64
         run: |
@@ -2530,7 +2530,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Darwin_aarch64-*.zip"
+          fileName: "erofs-utils-*Darwin_aarch64*.zip"
 
       - name: Move dependencies-Darwin-arm64
         run: |
@@ -2566,7 +2566,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Android_arm64-*.zip"
+          fileName: "erofs-utils-*Android_arm64*.zip"
 
       - name: Move dependencies-Android-arm64
         run: |
@@ -2602,7 +2602,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-Android_x86_64-*.zip"
+          fileName: "erofs-utils-*Android_x86_64*.zip"
 
       - name: Move dependencies-Android-x86_64
         run: |
@@ -2638,7 +2638,7 @@ jobs:
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
-          fileName: "erofs-utils-*-WSL_x86_64-*.zip"
+          fileName: "erofs-utils-*WSL_x86_64*.zip"
 
       - name: Move dependencies-WSL-x86_64
         run: |
