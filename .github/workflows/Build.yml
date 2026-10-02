@@ -73,12 +73,12 @@ jobs:
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-WSL-x86_64/"
 
       - name: Download dependencies-Linux-x86_64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -109,12 +109,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Linux-x86_64/*
 
       - name: Download dependencies-Linux-arm64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -145,12 +145,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Linux-arm64/*
 
       - name: Download dependencies-Windows-x86_64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_windows_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -182,12 +182,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Windows-x86_64/*
           
       - name: Download payload-dumper-go-Darwin-x86_64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_darwin_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -218,12 +218,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Darwin-x86_64/*
 
       - name: Download payload-dumper-go-Darwin-arm64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_darwin_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -254,12 +254,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/*
 
       - name: Download payload-dumper-go-Android-arm64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -290,12 +290,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Android-arm64/*
 
       - name: Download payload-dumper-go-Android-x86_64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -326,12 +326,12 @@ jobs:
           path: ./Analysis-Tool-For-ColorOS-Android-x86_64/*
 
       - name: Download payload-dumper-go-WSL-x86_64
-        uses: robinraju/release-downloader@v1.10
+        uses: robinraju/release-downloader@v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.10
+      - uses: robinraju/release-downloader@v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
