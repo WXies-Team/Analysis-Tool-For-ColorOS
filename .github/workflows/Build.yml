@@ -103,7 +103,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Linux-x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Linux-x86_64/*
@@ -139,7 +139,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Linux-arm64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Linux-arm64.zip
           path: ./Analysis-Tool-For-ColorOS-Linux-arm64/*
@@ -176,7 +176,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Windows-x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Windows-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Windows-x86_64/*
@@ -212,7 +212,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Darwin-x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Darwin-x86_64/*
@@ -248,7 +248,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Darwin-arm64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Darwin-arm64.zip
           path: ./Analysis-Tool-For-ColorOS-Darwin-arm64/*
@@ -284,7 +284,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Android-arm64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-arm64.zip
           path: ./Analysis-Tool-For-ColorOS-Android-arm64/*
@@ -320,7 +320,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-Android-x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-Android-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-Android-x86_64/*
@@ -356,7 +356,7 @@ jobs:
           rm ./*.tar.gz
 
       - name: Upload artifact-WSL-x86_64
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Analysis-Tool-For-ColorOS-${{ env.VERSION }}-WSL-x86_64.zip
           path: ./Analysis-Tool-For-ColorOS-WSL-x86_64/*
