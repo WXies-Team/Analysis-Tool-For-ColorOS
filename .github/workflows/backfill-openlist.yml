@@ -1,0 +1,66 @@
+name: backfill-openlist
+
+# 把**已存在的 GitHub Release 产物**补传到 OpenList（历史版本回填 / 指针修复用）。
+# 常规发版走 Build.yml 的 Deploy to OpenList，本 workflow 只处理「Release 早已存在、
+# 但 OpenList 上没有」或「需要重传」的情况——它不重新构建，只搬运。
+#
+# 用法：workflow_dispatch
+#   version   要回填的版本（= Release tag，如 2.1.0，必填）
+#   channel   通道（stable / beta / alpha，默认 stable）
+#   build_id  version.json 的 build_id；旧版本体系没有 Build ID 时填 0
+#
+# 幂等：重复执行会覆盖同名版本目录，归档清理按 1/2/3 策略照常执行。
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '要回填的版本（Release tag，如 2.1.0）'
+        required: true
+      channel:
+        description: '通道'
+        required: true
+        default: 'stable'
+        type: choice
+        options: [stable, beta, alpha]
+      build_id:
+        description: 'version.json 的 build_id（旧版本体系填 0）'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 下载 Release 产物
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          gh release download "$VERSION" -R "$GITHUB_REPOSITORY" --dir output --pattern '*.zip'
+          ls -la output/
+          # 复用 Release 正文作为 OpenList 各级 README（与发版时逐字一致）
+          gh release view "$VERSION" -R "$GITHUB_REPOSITORY" --json body --jq .body > release.md
+          echo "===== release.md ====="; cat release.md
+
+      - name: Deploy to OpenList
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+          BUILD_ID: ${{ inputs.build_id }}
+          ARTIFACT_DIR: output
+        run: bash ci/upload-openlist.sh
