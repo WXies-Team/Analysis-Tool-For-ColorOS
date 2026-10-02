@@ -1,1 +1,1 @@
-pyaxmlparser
+pyaxmlparser==0.3.31
