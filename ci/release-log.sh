@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # 生成 Release Log（Conventional Commits 分类），日志区间由调用方计算后传入。
 # 用法: ci/release-log.sh <range>     例: ci/release-log.sh 372b302..HEAD  /  ci/release-log.sh HEAD
-# 环境: VERSION / BUILD_ID / CHANNEL 必填；PRODUCT_NAME / OPENLIST_BASE_URL 可选
-#       （OPENLIST_BASE_URL 设置后在 Markdown 头注入 OpenList 下载链接）
+# 环境: VERSION / BUILD_ID / CHANNEL 必填；OPENLIST_BASE_URL 可选
+#       （设置后在 Markdown 头注入 OpenList 下载链接，如 https://host/你的分发目录）
 #
-# 一次生成两份文件（见 docs/VERSIONING.md §26）：
+# 一次生成两份文件（见 ~/.config/opencode/VERSIONING.md §26）：
 #   release.md    Markdown，供 OpenList README 与 GitHub Release notes 渲染（含版本标题与下载链接）
-#   changelog.txt 纯文本，供 version.json 的 changelog 字段
+#   changelog.txt 纯文本，供 version.json 的 changelog 字段（应用内更新弹窗直显）
+#                 —— 应用内已展示 version_name，故此文件不带版本头与任何标记，避免重复
 #
 # 过滤规则：docs/chore/ci/test/style/build 不入日志；完全相同的消息只保留一条。
 set -euo pipefail
@@ -15,7 +16,6 @@ RANGE=${1:?用法: ci/release-log.sh <range>}
 : "${VERSION:?VERSION is required}"
 : "${BUILD_ID:?BUILD_ID is required}"
 : "${CHANNEL:?CHANNEL is required}"
-PRODUCT_NAME=${PRODUCT_NAME:-Analysis Tool For ColorOS}
 OPENLIST_BASE_URL=${OPENLIST_BASE_URL:-}
 
 case "$CHANNEL" in
@@ -30,7 +30,6 @@ git log --pretty=format:'%s' "$RANGE" | awk \
   -v BUILD_ID="$BUILD_ID" \
   -v CHANNEL="$CHANNEL" \
   -v CHANNEL_LABEL="$CHANNEL_LABEL" \
-  -v PRODUCT="$PRODUCT_NAME" \
   -v OPENLIST="$OPENLIST_BASE_URL" \
   -v DATE="$(date -u +%F)" '
   /^feat(\([^)]*\))?:/ { s = $0; sub(/^[A-Za-z]+(\([^)]*\))?:[ \t]*/, "", s); if (s in seen) next; seen[s] = 1; a[++na] = s; next }
@@ -50,7 +49,7 @@ git log --pretty=format:'%s' "$RANGE" | awk \
   END {
     MD = "release.md"; TXT = "changelog.txt"
     # Markdown 头：OpenList / GitHub 渲染用（版本大标题 + 元信息 + 可选下载链接）
-    print "# " PRODUCT " " VERSION > MD
+    print "# Analysis Tool For ColorOS " VERSION > MD
     print "" > MD
     print "> " DATE " · Build " BUILD_ID " · " CHANNEL_LABEL > MD
     if (OPENLIST != "") {
@@ -58,7 +57,7 @@ git log --pretty=format:'%s' "$RANGE" | awk \
       print "> 📥 [前往 OpenList 下载" CHANNEL_LABEL "](" OPENLIST "/" CHANNEL "/)" > MD
     }
     print "" > MD
-    # 纯文本无头：版本号已在别处展示，这里不再重复
+    # 纯文本无头：应用内 version_name 已显示版本，这里不再重复
     # 分组标题中文化（Keep a Changelog 分类的中文对应），Stable 与非 Stable 统一
     empty = 1
     if (na) {
@@ -93,7 +92,7 @@ git log --pretty=format:'%s' "$RANGE" | awk \
     }
     if (empty) {
       # 无用户可见变更时按同格式输出兜底条目（业界惯例 Bug fixes and improvements），
-      # 避免日志出现开发向措辞
+      # 避免应用内更新弹窗出现开发向措辞
       print "### 🐛 修复" > MD; print "修复" > TXT
       print "- 修复了一些已知问题" > MD
       print "- 修复了一些已知问题" > TXT

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 严格遵循 docs/VERSIONING.md 规范
+# 严格遵循 ~/.config/opencode/VERSIONING.md 规范
 # 将构建产物与更新日志上传至服务器 OpenList 目录，并按通道策略自动归档与清理旧版本。
 # 通道保留策略：
 #   alpha  : 保留最新 1 版
