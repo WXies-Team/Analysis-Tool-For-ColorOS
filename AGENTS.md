@@ -2,16 +2,12 @@
 
 Analysis Tool For ColorOS: a Python CLI that downloads ColorOS ROMs, extracts images, and pulls, renames and version-tracks APKs into **one JSON database set** (`app_code.json` / `app_name.json` / `app_version.json` — no per-device-class split, unlike the HyperOS/OriginOS siblings). APK info is read via `pyaxmlparser`. End-user usage and downloads are in `README.md`.
 
-**This repo is Chinese-documented and self-contained — the detail lives here, not in this file:**
+**This repo's project-level documentation is this file alone** (HANDOFF.md and docs/ were retired — handoff/architecture docs are deprecated workflow-wide). Versioning, channels, tag rules and the release-log template are specified globally in `~/.config/opencode/VERSIONING.md` — **read it before touching any CI file**; commit format follows `~/.config/opencode/COMMITTING.md`. Directory layout and pipeline details are inferable from the code and the workflow comments.
 
-| File | Content |
-|---|---|
-| `HANDOFF.md` | Environment, secrets, release flow, key decisions, pitfalls, acceptance checklist — **read on takeover** |
-| `docs/VERSIONING.md` | Version numbers / three channels / trigger rules / OpenList / full workflow — **the single source of truth; read before touching CI** |
-| `docs/COMMITTING.md` | Commit spec — a byte-identical twin of VERSIONING §30; **editing one means editing the other** |
-| `docs/ARCHITECTURE.md` | Directory layout and the two pipelines |
+## Environment
 
-This AGENTS.md is only the English orientation layer; when it and the Chinese docs disagree, the Chinese docs win — fix this file.
+- Secrets are **org-level, already visible to every org repo** — this repo needs no per-repo setup: `SERVER_HOST` / `SERVER_USER` / `SERVER_SSH_KEY` / `SERVER_OPENLIST_DIR` (OpenList storage root; `ci/upload-openlist.sh` appends the distribution dir itself — never hard-code it). `SERVER_BASE_DIR` belongs to the Calorie Diary backend and is **not used here**. Optional var `SSH_PORT` (default 22).
+- Runner: the org-level self-hosted `HORATIO-DEV` (Linux x64), **shared by the three Analysis-Tool repos**; its workspace persists across jobs (`Analysis.yml` relies on the checkout's `git clean` to clear residue).
 
 ## Commands
 
@@ -19,19 +15,19 @@ This AGENTS.md is only the English orientation layer; when it and the Chinese do
 pip install -r requirements.txt
 python3 main.py -h
 
-# Sanity checks before pushing CI changes (from HANDOFF §7; no test suite exists)
+# Sanity checks before pushing CI changes (no test suite exists)
 bash -n ci/release-log.sh && bash -n ci/upload-openlist.sh
 python3 -c "import yaml,sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" .github/workflows/*.yml
 grep -rn '/www/' ci .github && echo "FAIL: server paths in source" || echo "OK"
 ```
 
-Release flow in one line: push `main` → alpha to OpenList (no tag); `git tag x.y.z[-beta.N]` → beta/stable + Release. Details and rules: `docs/VERSIONING.md` (which mirrors `~/.config/opencode/VERSIONING.md`).
+Release flow in one line: push `main` → alpha to OpenList (no tag); `git tag x.y.z[-beta.N]` → beta/stable + Release. Details and rules: `~/.config/opencode/VERSIONING.md`.
 
 ## Boundaries
 
 **Always**
 - Doc-only commits use the `docs:` prefix (paths-ignore skips the build; the release log also filters them).
-- Any CI change goes through `docs/VERSIONING.md` first and keeps `docs/COMMITTING.md` in sync when it touches commit rules.
+- Any CI change goes through `~/.config/opencode/VERSIONING.md` first; commit-rule changes follow `~/.config/opencode/COMMITTING.md`.
 
 **Ask first**
 - Renaming `build.yml` (the alpha log range queries the Actions API by that filename), changing the tag regex, the OpenList retention policy, or artifact naming.
@@ -42,7 +38,7 @@ Release flow in one line: push `main` → alpha to OpenList (no tag); `git tag x
 - Hand-edit `release.md` / `changelog.txt` / `version.json` on the server.
 - Commit build output (`output/`, `*.zip`, `__pycache__/`, `venv/`).
 
-## Known pitfalls (full list in HANDOFF §6)
+## Known pitfalls
 
 - **Upstream 500s**: CI pulls latest `ssut/payload-dumper-go` / `sekaiacg/erofs-utils` via the GitHub API — flaky builds are usually this, **rerun**.
 - Tags must be exactly `x.y.z` / `x.y.z-beta.N`; this repo's history once used a four-segment `v2.0.3.0` format — that's gone, don't revive it.
