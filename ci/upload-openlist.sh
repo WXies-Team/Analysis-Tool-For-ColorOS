@@ -75,6 +75,19 @@ VERSION_JSON_TMP="$RUNNER_TEMP/version.json"
 FILE_NAME="$ARTIFACT_PREFIX-$VERSION-$BUILD_ID-$PRIMARY_ARTIFACT.zip"
 DOWNLOAD_URL="https://storage.horatio.cn/Analysis-Tool-For-ColorOS/$CHANNEL/$VERSION/$FILE_NAME"
 
+# version.json 的 sha256 必须对 **download_url 指向的那个产物** 算——校验的正是
+# 用户下载下来的文件，算成别的包就永远对不上。
+# 算不出来 = 没有它客户端就不再走自动更新，发布出去只会让用户卡在更新页，
+# 所以这里直接让这一步失败，而不是留个空值发布出去。
+ARTIFACT_SHA256=""
+if [ -f "$ARTIFACT_DIR/$FILE_NAME" ]; then
+  ARTIFACT_SHA256=$(sha256sum "$ARTIFACT_DIR/$FILE_NAME" | cut -d' ' -f1)
+fi
+if [ -z "$ARTIFACT_SHA256" ]; then
+  echo "::error::未找到 $ARTIFACT_DIR/$FILE_NAME，无法生成 version.json 的 sha256"
+  exit 1
+fi
+
 # changelog 优先取纯文本 changelog.txt（避免与日志开头重复）；
 # 缺失时回退 release.md 全文，再回退默认文案
 CHANGELOG_ESCAPED="\"$VERSION 更新\""
@@ -92,6 +105,7 @@ cat << EOF > "$VERSION_JSON_TMP"
   "build_id": $BUILD_ID,
   "file_name": "$FILE_NAME",
   "download_url": "$DOWNLOAD_URL",
+  "sha256": "$ARTIFACT_SHA256",
   "changelog": $CHANGELOG_ESCAPED,
   "updated_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 }
