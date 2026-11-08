@@ -10,7 +10,8 @@
 #                 —— 应用内已展示 version_name，故此文件不带版本头与任何标记，避免重复
 #
 # 过滤规则：docs/chore/ci/test/style/build 不入日志；完全相同的消息只保留一条。
-set -euo pipefail
+set -Eeuo pipefail
+shopt -s inherit_errexit
 
 RANGE=${1:?用法: ci/release-log.sh <range>}
 : "${VERSION:?VERSION is required}"

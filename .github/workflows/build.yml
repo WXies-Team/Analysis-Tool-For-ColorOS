@@ -19,6 +19,10 @@ on:
       - '.github/**'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 permissions:
   contents: write
   actions: read   # alpha 日志区间需查询本工作流历史成功 run（VERSIONING §9.1）
@@ -30,8 +34,9 @@ concurrency:
 jobs:
   build:
     runs-on: self-hosted
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
@@ -39,7 +44,7 @@ jobs:
       # 直接写入 GITHUB_ENV 供本 job 全部后续步骤使用（无需独立 job，省一次全历史 clone）
       - name: Determine channel and version
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           BUILD_ID=${{ github.run_number }}
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG=${GITHUB_REF#refs/tags/}
@@ -92,7 +97,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OPENLIST_BASE_URL: https://storage.horatio.cn/Analysis-Tool-For-ColorOS
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           if [ "$CHANNEL" = "alpha" ]; then
             PREV=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/build.yml/runs?branch=${GITHUB_REF_NAME}&status=success&per_page=20" \
               --jq ".workflow_runs | map(select(.id != ${GITHUB_RUN_ID} and .head_sha != \"${GITHUB_SHA}\")) | .[0].head_sha // empty" || true)
@@ -115,7 +120,7 @@ jobs:
           cat changelog.txt
 
       - name: Checkout code into separate directory
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           path: 'repo'
 
@@ -141,12 +146,12 @@ jobs:
           cp -r ./repo/* "./Analysis-Tool-For-ColorOS-WSL-x86_64/"
 
       - name: Download dependencies-Linux-x86_64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -171,12 +176,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download dependencies-Linux-arm64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -201,12 +206,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download dependencies-Windows-x86_64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_windows_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -232,12 +237,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Darwin-x86_64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_darwin_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -262,12 +267,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Darwin-arm64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_darwin_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -292,12 +297,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Android-arm64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -322,12 +327,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-Android-x86_64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -352,12 +357,12 @@ jobs:
           rm -f ./*.tar.gz
 
       - name: Download payload-dumper-go-WSL-x86_64
-        uses: robinraju/release-downloader@v1.13
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "ssut/payload-dumper-go"
           latest: true
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
-      - uses: robinraju/release-downloader@v1.13
+      - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-utils"
           latest: true
@@ -398,8 +403,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           ARGS=(create "$VERSION" --title "$VERSION" --notes-file release.md)
           if [ "$CHANNEL" = "beta" ]; then ARGS+=(--prerelease); fi
-          mapfile -t FILES < <(ls output/Analysis-Tool-For-ColorOS-"$VERSION"-"$BUILD_ID"-*.zip)
+          shopt -s nullglob
+          FILES=(output/Analysis-Tool-For-ColorOS-"$VERSION"-"$BUILD_ID"-*.zip)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "::error::No artifact matching output/Analysis-Tool-For-ColorOS-$VERSION-$BUILD_ID-*"
+            exit 1
+          fi
           gh release "${ARGS[@]}" "${FILES[@]}"

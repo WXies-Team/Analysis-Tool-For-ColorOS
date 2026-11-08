@@ -41,8 +41,9 @@ concurrency:
 jobs:
   rollback:
     runs-on: self-hosted
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: 推送到 OpenList
         env:
@@ -56,7 +57,7 @@ jobs:
           TARGET_VERSION: ${{ inputs.target_version }}
           DROP_VERSION: ${{ inputs.drop_version }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
           : "${OPENLIST_STORAGE_DIR:?OPENLIST_STORAGE_DIR is required}"
           BASE_STORAGE="$OPENLIST_STORAGE_DIR/Analysis-Tool-For-ColorOS"
           TARGET_DIR="$BASE_STORAGE/$CHANNEL"
@@ -76,7 +77,7 @@ jobs:
 
           # 1) 恢复版本目录：归档原件优先（含产物）
           cat <<'EOS' > "$RUNNER_TEMP/restore.sh"
-          set -euo pipefail
+          set -Eeuo pipefail
           TARGET_DIR="$1"; ARCHIVE_DIR="$2"; SNAP="$3"
           SNAPDIR="$TARGET_DIR/$SNAP"
           ARCHIVED="$ARCHIVE_DIR/$SNAP"

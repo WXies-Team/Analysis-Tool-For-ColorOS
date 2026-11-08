@@ -5,7 +5,8 @@
 #   alpha  : 保留最新 1 版
 #   beta   : 保留最新 2 版
 #   stable : 保留最新 3 版
-set -euo pipefail
+set -Eeuo pipefail
+shopt -s inherit_errexit
 
 : "${SERVER_HOST:?SERVER_HOST is required}" \
   "${SERVER_USER:?SERVER_USER is required}" \
@@ -55,7 +56,8 @@ echo "== [OpenList] 上传构建产物至 $VERSION_DIR =="
 # 版本目录由 CI 独占：先清掉该目录下已有的 zip（历史命名、重传残留），
 # 保证目录内容与本次产物逐字一致——否则改名/重跑会出现新旧两套文件。
 run_ssh "rm -f '$VERSION_DIR'/*.zip"
-mapfile -t ARTIFACTS < <(ls "$ARTIFACT_DIR/$ARTIFACT_PREFIX-$VERSION"-*.zip 2>/dev/null || true)
+shopt -s nullglob
+ARTIFACTS=("$ARTIFACT_DIR/$ARTIFACT_PREFIX-$VERSION"-*.zip)
 if [ "${#ARTIFACTS[@]}" -eq 0 ]; then
   echo "::error::未找到待上传的产物: $ARTIFACT_DIR/$ARTIFACT_PREFIX-$VERSION-*.zip"
   exit 1
@@ -118,7 +120,7 @@ rm -f "$VERSION_JSON_TMP"
 # 3. 维护项目根目录的版本选择美化卡片 README.md，供 OpenList 自动渲染
 echo "== [OpenList] 维护 Analysis-Tool-For-ColorOS 根目录版本选择卡片 README.md =="
 run_ssh "mkdir -p '$BASE_STORAGE/alpha' '$BASE_STORAGE/beta' '$BASE_STORAGE/stable'"
-INDEX_README_TMP="$RUNNER_TEMP/hyperos_index_readme.md"
+INDEX_README_TMP="$RUNNER_TEMP/index_readme.md"
 cat << 'EOF' > "$INDEX_README_TMP"
 <div style="max-width: 780px; margin: 0 auto; padding: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 <div style="text-align: center; margin: 16px 0 20px 0;">
