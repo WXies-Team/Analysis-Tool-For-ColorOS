@@ -21,7 +21,7 @@ on:
 
 permissions:
   contents: write
-  actions: read   # alpha 日志区间需查询本工作流历史成功 run（§10.1）
+  actions: read   # alpha 日志区间需查询本工作流历史成功 run（VERSIONING §9.1）
 
 concurrency:
   group: build-${{ github.ref }}
@@ -56,7 +56,21 @@ jobs:
               echo "VERSION 文件格式错误: '$BASE'，应为 MAJOR.MINOR.PATCH"
               exit 1
             fi
-            VERSION="$BASE-alpha.$BUILD_ID"
+            # alpha.N = 距锚点的提交数（最小 1）；锚点取「最后一个 Beta/Stable tag」与「VERSION 最后一次修改」
+            # 中较新的那个。main 禁止 rebase/squash，否则计数会回退。
+            TAG_ANCHOR=$(git describe --tags --abbrev=0 2>/dev/null || true)
+            VER_ANCHOR=$(git log -1 --format=%H -- VERSION 2>/dev/null || true)
+            if [ -n "$TAG_ANCHOR" ] && { [ -z "$VER_ANCHOR" ] || git merge-base --is-ancestor "$VER_ANCHOR" "$TAG_ANCHOR"; }; then
+              ANCHOR="$TAG_ANCHOR"
+            else
+              ANCHOR="$VER_ANCHOR"
+            fi
+            if [ -z "$ANCHOR" ]; then
+              echo "无法确定 alpha 计数锚点：仓库没有 tag，且 VERSION 不在提交历史中"
+              exit 1
+            fi
+            ALPHA_COUNT=$(git rev-list --count "$ANCHOR"..HEAD)
+            VERSION="$BASE-alpha.$(( ALPHA_COUNT > 0 ? ALPHA_COUNT : 1 ))"
           fi
           {
             echo "CHANNEL=$CHANNEL"
@@ -66,11 +80,11 @@ jobs:
           } >> "$GITHUB_ENV"
           echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
 
-      # 日志范围按 channel 分段（§10.1/§12.1/§15.1）：
+      # 日志范围按 channel 分段（VERSIONING §9.1）：
       #   alpha  → 上一次成功构建的 commit .. 当前（alpha 不打 tag，经 Actions API 取上个成功 run）
       #   beta   → 上一个 Beta Tag .. 当前 Tag（无更早 Beta 则回退最近任意 Tag）
       #   stable → 上一个 Stable Tag .. 当前 Tag（同上回退）
-      # 生成双文件（模板与示例见 §26）：
+      # 生成双文件（模板与示例见 RELEASE-PIPELINE §1）：
       #   release.md   → OpenList README / GitHub Release notes（Markdown）
       #   changelog.txt → version.json（纯文本无版本头）
       - name: Generate release log
@@ -367,7 +381,7 @@ jobs:
           rm -f ./*.zip
           rm -f ./*.tar.gz
 
-      # 上传至 OpenList 存储目录并按通道执行旧版本清理策略（脚本全文见 §27.8）
+      # 上传至 OpenList 存储目录并按通道执行旧版本清理策略（脚本全文见 RELEASE-PIPELINE §2.6）
       - name: Deploy to OpenList
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}

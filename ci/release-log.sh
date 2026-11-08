@@ -4,7 +4,7 @@
 # 环境: VERSION / BUILD_ID / CHANNEL 必填；OPENLIST_BASE_URL 可选
 #       （设置后在 Markdown 头注入 OpenList 下载链接，如 https://host/你的分发目录）
 #
-# 一次生成两份文件（见 ~/.config/opencode/VERSIONING.md §26）：
+# 一次生成两份文件（见 ~/.config/opencode/RELEASE-PIPELINE.md §1）：
 #   release.md    Markdown，供 OpenList README 与 GitHub Release notes 渲染（含版本标题与下载链接）
 #   changelog.txt 纯文本，供 version.json 的 changelog 字段（应用内更新弹窗直显）
 #                 —— 应用内已展示 version_name，故此文件不带版本头与任何标记，避免重复
