@@ -163,9 +163,9 @@ jobs:
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Linux_x86_64*.zip"
+          fileName: "erofs-tools-*Linux_x86_64*.zip"
 
       - name: Move dependencies-Linux-x86_64
         run: |
@@ -193,9 +193,9 @@ jobs:
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Linux_aarch64*.zip"
+          fileName: "erofs-tools-*Linux_aarch64*.zip"
 
       - name: Move dependencies-Linux-arm64
         run: |
@@ -223,9 +223,9 @@ jobs:
           fileName: "payload-dumper-go_*_windows_amd64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Cygwin_x86_64*.zip"
+          fileName: "erofs-tools-*Cygwin_x86_64*.zip"
 
       - name: Move dependencies-Windows-x86_64
         run: |
@@ -254,9 +254,9 @@ jobs:
           fileName: "payload-dumper-go_*_darwin_amd64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Darwin_x86_64*.zip"
+          fileName: "erofs-tools-*Darwin_x86_64*.zip"
 
       - name: Move dependencies-Darwin-x86_64
         run: |
@@ -284,9 +284,9 @@ jobs:
           fileName: "payload-dumper-go_*_darwin_arm64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Darwin_aarch64*.zip"
+          fileName: "erofs-tools-*Darwin_aarch64*.zip"
 
       - name: Move dependencies-Darwin-arm64
         run: |
@@ -314,9 +314,9 @@ jobs:
           fileName: "payload-dumper-go_*_linux_arm64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Android_arm64*.zip"
+          fileName: "erofs-tools-*Android_arm64*.zip"
 
       - name: Move dependencies-Android-arm64
         run: |
@@ -344,9 +344,9 @@ jobs:
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*Android_x86_64*.zip"
+          fileName: "erofs-tools-*Android_x86_64*.zip"
 
       - name: Move dependencies-Android-x86_64
         run: |
@@ -374,9 +374,9 @@ jobs:
           fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
-          repository: "sekaiacg/erofs-utils"
+          repository: "sekaiacg/erofs-tools"
           latest: true
-          fileName: "erofs-utils-*WSL_x86_64*.zip"
+          fileName: "erofs-tools-*WSL_x86_64*.zip"
 
       - name: Move dependencies-WSL-x86_64
         run: |

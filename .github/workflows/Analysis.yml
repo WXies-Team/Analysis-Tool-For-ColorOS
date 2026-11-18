@@ -37,10 +37,10 @@ jobs:
         fileName: "payload-dumper-go_*_linux_amd64.tar.gz"
     - uses: robinraju/release-downloader@v1.13
       with:
-        repository: "sekaiacg/erofs-utils"
+        repository: "sekaiacg/erofs-tools"
         latest: true
         extract: true
-        fileName: "erofs-utils-*-Linux_x86_64-*.zip"
+        fileName: "erofs-tools-*Linux_x86_64*.zip"
     
     - name: Move dependencies-Linux-x86_64
       run: |
