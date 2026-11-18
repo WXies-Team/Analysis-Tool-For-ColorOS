@@ -74,7 +74,11 @@ jobs:
               echo "无法确定 alpha 计数锚点：仓库没有 tag，且 VERSION 不在提交历史中"
               exit 1
             fi
-            ALPHA_COUNT=$(git rev-list --count "$ANCHOR"..HEAD)
+            # paths-ignore 跳过的纯 docs 提交不触发构建，也不该占 alpha 序号，
+            # 否则两次构建之间会跳号（如 29 → 35）。这里的 pathspec 与上面的
+            # paths-ignore 逐项对齐：docs/**、*.md（含 **/*.md）、.github/**。
+            ALPHA_COUNT=$(git rev-list --count "$ANCHOR"..HEAD -- . \
+              ':(exclude)docs/**' ':(exclude)*.md' ':(exclude).github/**')
             VERSION="$BASE-alpha.$(( ALPHA_COUNT > 0 ? ALPHA_COUNT : 1 ))"
           fi
           {
