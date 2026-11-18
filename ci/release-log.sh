@@ -110,6 +110,12 @@ if [ "$NEED_NOTES" -eq 1 ]; then
 fi
 cat "$DETAILS_TXT" >> "$TXT"
 
+if [ ! -s "$TXT" ]; then
+  # An alpha range with only non-user-facing commits has no detail lines. Emit a factual
+  # channel label instead of an empty in-app highlight — not a "various fixes" filler.
+  echo "内测自动构建" >> "$TXT"
+fi
+
 echo "===== release.md ====="
 cat "$MD"
 echo "===== changelog.txt ====="
