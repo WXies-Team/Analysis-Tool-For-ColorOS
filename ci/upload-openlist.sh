@@ -90,6 +90,9 @@ if [ -z "$ARTIFACT_SHA256" ]; then
   exit 1
 fi
 
+# 默认下载产物的字节数，供客户端展示下载体积；与 sha256 取自同一个文件。
+ARTIFACT_SIZE=$(stat -c%s "$ARTIFACT_DIR/$FILE_NAME")
+
 # changelog 优先取纯文本 changelog.txt（避免与日志开头重复）；
 # 缺失时回退 release.md 全文，再回退默认文案
 CHANGELOG_ESCAPED="\"$VERSION 更新\""
@@ -108,6 +111,7 @@ cat << EOF > "$VERSION_JSON_TMP"
   "file_name": "$FILE_NAME",
   "download_url": "$DOWNLOAD_URL",
   "sha256": "$ARTIFACT_SHA256",
+  "size_bytes": $ARTIFACT_SIZE,
   "changelog": $CHANGELOG_ESCAPED,
   "updated_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 }

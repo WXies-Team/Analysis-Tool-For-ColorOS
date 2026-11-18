@@ -89,6 +89,12 @@ jobs:
           } >> "$GITHUB_ENV"
           echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
 
+      # Beta/Stable 必须由发布者按 ~/.config/opencode/templates/release-notes-style.md 写好 release-notes.md；
+      # alpha 的日志完全自动生成，校验脚本会直接跳过。
+      - name: Check release notes
+        if: env.CHANNEL != 'alpha'
+        run: bash ci/check-release-notes.sh
+
       # 日志范围按 channel 分段（VERSIONING §9.1）：
       #   alpha  → 上一次成功构建的 commit .. 当前（alpha 不打 tag，经 Actions API 取上个成功 run）
       #   beta   → 上一个 Beta Tag .. 当前 Tag（无更早 Beta 则回退最近任意 Tag）
