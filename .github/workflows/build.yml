@@ -61,17 +61,14 @@ jobs:
               echo "VERSION 文件格式错误: '$BASE'，应为 MAJOR.MINOR.PATCH"
               exit 1
             fi
-            # alpha.N = 距锚点的提交数（最小 1）；锚点取「最后一个 Beta/Stable tag」与「VERSION 最后一次修改」
-            # 中较新的那个。main 禁止 rebase/squash，否则计数会回退。
-            TAG_ANCHOR=$(git describe --tags --abbrev=0 2>/dev/null || true)
-            VER_ANCHOR=$(git log -1 --format=%H -- VERSION 2>/dev/null || true)
-            if [ -n "$TAG_ANCHOR" ] && { [ -z "$VER_ANCHOR" ] || git merge-base --is-ancestor "$VER_ANCHOR" "$TAG_ANCHOR"; }; then
-              ANCHOR="$TAG_ANCHOR"
-            else
-              ANCHOR="$VER_ANCHOR"
-            fi
+            # alpha.N = 距 VERSION 上次修改的提交数（最小 1）。锚点**只**取 VERSION 修改点，
+            # 不用 Beta/Stable tag——发 beta 不 bump VERSION 时若以 beta tag 为锚点，下一轮
+            # alpha 会重新从 1 数起，同一 target 版本反复产出 alpha.1。只有 VERSION 变更
+            # （新 target）才重置序号，符合 SemVer「同一版本预发布标识不可复用」。
+            # main 禁止 rebase/squash，否则计数会回退。
+            ANCHOR=$(git log -1 --format=%H -- VERSION 2>/dev/null || true)
             if [ -z "$ANCHOR" ]; then
-              echo "无法确定 alpha 计数锚点：仓库没有 tag，且 VERSION 不在提交历史中"
+              echo "无法确定 alpha 计数锚点：VERSION 不在提交历史中"
               exit 1
             fi
             # paths-ignore 跳过的纯 docs 提交不触发构建，也不该占 alpha 序号，
