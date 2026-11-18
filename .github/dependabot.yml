@@ -29,7 +29,7 @@ updates:
       include: "scope"
     open-pull-requests-limit: 10
     groups:
-      actions-minor-patch:
+      github-actions-minor-patch:
         update-types:
           - "minor"
           - "patch"
