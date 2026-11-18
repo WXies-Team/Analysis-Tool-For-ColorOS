@@ -255,8 +255,10 @@ jobs:
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-tools"
-          latest: true
-          fileName: "erofs-tools-*Darwin_x86_64*.zip"
+          # v1.9+ dropped extract.erofs from macOS builds; pin the last release that ships it.
+          latest: false
+          tag: "v1.8.10-251217"
+          fileName: "erofs-utils-*Darwin_x86_64*.zip"
 
       - name: Move dependencies-Darwin-x86_64
         run: |
@@ -285,8 +287,10 @@ jobs:
       - uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f  # v1.13
         with:
           repository: "sekaiacg/erofs-tools"
-          latest: true
-          fileName: "erofs-tools-*Darwin_aarch64*.zip"
+          # v1.9+ dropped extract.erofs from macOS builds; pin the last release that ships it.
+          latest: false
+          tag: "v1.8.10-251217"
+          fileName: "erofs-utils-*Darwin_aarch64*.zip"
 
       - name: Move dependencies-Darwin-arm64
         run: |
