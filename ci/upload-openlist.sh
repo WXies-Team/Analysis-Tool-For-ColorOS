@@ -49,7 +49,10 @@ printf '%s\n' "$SERVER_SSH_KEY" > "$RUNNER_TEMP/openlist_key"
 
 echo "== [OpenList] 准备版本目录: $VERSION_DIR =="
 run_ssh "mkdir -p '$VERSION_DIR'"
-run_ssh "if [ -d '$OPENLIST_STORAGE_DIR/storage' ]; then rm -rf '$OPENLIST_STORAGE_DIR/storage'; fi" || true
+# Legacy junk directory cleanup is opt-in: some projects legitimately keep storage/.
+if [ "${OPENLIST_CLEAN_LEGACY_STORAGE:-0}" = "1" ]; then
+  run_ssh "if [ -d '$OPENLIST_STORAGE_DIR/storage' ]; then rm -rf '$OPENLIST_STORAGE_DIR/storage'; fi" || true
+fi
 
 # 1. 上传构建产物至版本号文件夹
 echo "== [OpenList] 上传构建产物至 $VERSION_DIR =="
@@ -93,14 +96,13 @@ fi
 # 默认下载产物的字节数，供客户端展示下载体积；与 sha256 取自同一个文件。
 ARTIFACT_SIZE=$(stat -c%s "$ARTIFACT_DIR/$FILE_NAME")
 
-# changelog 优先取纯文本 changelog.txt（避免与日志开头重复）；
-# 缺失时回退 release.md 全文，再回退默认文案
-CHANGELOG_ESCAPED="\"$VERSION 更新\""
-if [ -f changelog.txt ]; then
-  CHANGELOG_ESCAPED=$(cat changelog.txt | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()))' 2>/dev/null || echo "\"$VERSION 更新\"")
-elif [ -f release.md ]; then
-  CHANGELOG_ESCAPED=$(cat release.md | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()))' 2>/dev/null || echo "\"$VERSION 更新\"")
+# changelog must come from plain-text changelog.txt. release.md is Markdown and must never
+# leak into the in-app dialog; a missing changelog is a release bug, not a reason for filler copy.
+if [ ! -s changelog.txt ]; then
+  echo "::error::missing or empty changelog.txt — refusing to publish filler update copy"
+  exit 1
 fi
+CHANGELOG_ESCAPED=$(python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()))' < changelog.txt)
 
 cat << EOF > "$VERSION_JSON_TMP"
 {
