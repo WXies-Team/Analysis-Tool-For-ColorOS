@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Validate the AI-written release notes for tagged channels (beta / stable).
-# Alpha ships auto-generated logs only, so this script is a no-op for alpha (and when no
-# channel is supplied) and always exits 0. Called by build.yml before "Generate release log".
+# Alpha ships auto-generated logs only, so this script is a no-op for alpha; CHANNEL is still
+# required (missing channel fails fast). Called by build.yml before "Generate release log".
 # Format contract: templates/release-notes-style.md.
 # Usage: ci/check-release-notes.sh <channel>   (CHANNEL env is also accepted)
 set -Eeuo pipefail
