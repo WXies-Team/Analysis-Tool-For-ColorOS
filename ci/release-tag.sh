@@ -3,12 +3,17 @@
 # release; CI does the version math, build, tag and publish (fully unattended afterwards).
 #
 # Usage: ci/release-tag.sh <beta|stable>
-#   beta   -> writes VERSION=<target>, commits "chore(release): beta", pushes main
-#   stable -> writes VERSION=<target>, commits "chore(release): stable", pushes main
+#   beta   -> writes a release request (target + channel), commits, pushes main
+#   stable -> writes a release request (target + channel), commits, pushes main
 #
 # <target> is computed from the last stable tag via next-version.sh, so the version number is
-# NEVER chosen by hand. The VERSION file is only a human-readable record of the target and the
-# commit-message marker is the signal CI reads; the authoritative baseline remains the tag.
+# NEVER chosen by hand. The authoritative baseline remains the tag; VERSION is a human-readable
+# record and release-request.json is the machine-readable signal for CI.
+#
+# WHY a real file write: build.yml uses `paths-ignore` for docs/*.md/.github; an empty commit
+# ("git commit --allow-empty") would be SKIPPED by GitHub (docs: "If there are no files changed,
+# the workflow will not run"). Writing release-request.json guarantees a non-ignored diff so the
+# marker commit always triggers CI — even for consecutive betas with the same target.
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
@@ -26,10 +31,10 @@ BASE=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname \
 
 TARGET=$(bash "$(dirname "$0")/next-version.sh" "$BASE" "$BASE..HEAD")
 printf '%s\n' "$TARGET" > VERSION
-git add VERSION
-# --allow-empty so consecutive beta markers (same target, VERSION unchanged) still create the
-# marker commit that triggers CI; CI derives the incrementing beta N from existing tags.
-git commit --allow-empty -m "chore(release): $CHANNEL"
+printf '{"channel":"%s","target":"%s","requested_at":"%s"}\n' \
+  "$CHANNEL" "$TARGET" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > release-request.json
+git add VERSION release-request.json
+git commit -m "chore(release): $CHANNEL"
 git push origin HEAD
 
 echo "[release-tag] pushed chore(release): $CHANNEL with VERSION=$TARGET"
