@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Generate Release Log with the hybrid policy (see ~/.config/opencode/docs/RELEASE-PIPELINE.md §1):
-#   alpha  -> auto from commits only (feat/fix/perf) + banner
-#   beta   -> release-notes.md (AI-written, per docs/release-notes-style.md) for the
-#             highlight, plus auto-generated grouped details appended
-#   stable -> release-notes.md required (CI fails without it), used as primary notes + details
+# Generate Release Log with the three-channel policy (RELEASE-PIPELINE §1):
+#   alpha  -> auto from commits only (feat/fix/perf) + banner; no notes file
+#   beta   -> FIRST LINE of release-notes.md as highlight (AI-written), plus a focused
+#             "测试重点 / 已知问题" block when present, plus auto grouped detail from commits
+#   stable -> FULL release-notes.md narrative (highlight + 新增/改进/修复 + upgrade notes),
+#             plus auto grouped detail from commits; no banner (first notes line is the highlight)
+#
 # There is NO "修复了一些已知问题" fallback: with nothing qualifying, emit only the honest
 # highlight (first auto detail for alpha, notes first line for beta/stable).
 #
@@ -90,10 +92,25 @@ if [ -n "$BANNER" ]; then
   echo "> $BANNER" >> "$MD"
   echo "" >> "$MD"
 fi
-if [ "$NEED_NOTES" -eq 1 ]; then
+
+if [ "$CHANNEL" = "stable" ]; then
+  # Stable: full human-written narrative is the primary content.
   cat "$NOTES_FILE" >> "$MD"
   echo "" >> "$MD"
+elif [ "$CHANNEL" = "beta" ]; then
+  # Beta: highlight (first line) + optional focused test/known-issue block; the grouped detail
+  # below is auto-generated from commits, so the full narrative is intentionally NOT copied.
+  HIGHLIGHT=$(awk 'NF{print; exit}' "$NOTES_FILE")
+  printf '%s\n' "$HIGHLIGHT" >> "$MD"
+  echo "" >> "$MD"
+  # Carry over the beta-specific sections only (release-notes-style.md skeleton).
+  awk '
+    /^### (测试重点|反馈|已知问题|本次测试)/ { keep=1 }
+    /^### / && $0 !~ /^### (测试重点|反馈|已知问题|本次测试)/ { keep=0 }
+    keep { print }
+  ' "$NOTES_FILE" >> "$MD"
 fi
+
 if [ -s "$DETAILS_MD" ]; then
   echo "<details>" >> "$MD"
   echo "<summary>变更明细</summary>" >> "$MD"
@@ -102,7 +119,10 @@ if [ -s "$DETAILS_MD" ]; then
   echo "</details>" >> "$MD"
 fi
 
-# ---- changelog.txt: no banner; first line = notes first line (beta/stable) or auto detail (alpha) ----
+# ---- changelog.txt: no banner; first line = highlight (all channels) ----
+# Per RELEASE-PIPELINE §1 + update-dialog-spec.md the in-app dialog always renders one highlight
+# followed by grouped detail, identical shape across channels. Stable's highlight is the notes
+# first line; beta's is the notes first line; alpha's is the first auto detail (or fallback).
 : > "$TXT"
 if [ "$NEED_NOTES" -eq 1 ]; then
   HIGHLIGHT=$(awk 'NF{print; exit}' "$NOTES_FILE")

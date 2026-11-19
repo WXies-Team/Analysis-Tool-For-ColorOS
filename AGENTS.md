@@ -1,6 +1,6 @@
 # AGENTS.md — Analysis Tool For ColorOS
 
-Python CLI that downloads ColorOS ROMs, extracts images and version-tracks APKs into one JSON set (`app_code.json`, `app_name.json`, `app_version.json` — no per-device-class split). CI builds 8 platform zips to self-hosted OpenList (alpha/beta/stable) plus GitHub Releases for beta/stable; push `main` → alpha, tag `x.y.z` / `x.y.z-beta.N` → stable/beta.
+Python CLI that downloads ColorOS ROMs, extracts images and version-tracks APKs into one JSON set (`app_code.json`, `app_name.json`, `app_version.json` — no per-device-class split). CI builds 8 platform zips to self-hosted OpenList (alpha/beta/stable) plus GitHub Releases for beta/stable; push `main` → alpha, `chore(release): beta|stable` marker (via `ci/release-tag.sh`) → beta/stable; version auto-derived from commits.
 
 ## Commands
 
@@ -28,7 +28,7 @@ No test suite; these are the only local checks. Local run needs Python 3.x + `ar
 
 ### Always
 - Use the `docs:` prefix for doc-only commits (`paths-ignore` skips the build; release-log filters docs/chore/ci/test/style/build/refactor/revert).
-- Beta/stable: write `release-notes.md` per `docs/release-notes-style.md` before tagging — first non-empty line is the one-sentence "why update" highlight; no raw commit prefixes or filler (CI gate `ci/check-release-notes.sh`).
+- Beta/stable: write `release-notes.md` per `docs/release-notes-style.md` before `ci/release-tag.sh` — first non-empty line is the one-sentence "why update" highlight; no raw commit prefixes or filler (CI gate `ci/check-release-notes.sh`).
 - Keep `ci/release-log.sh` and `ci/upload-openlist.sh` standalone: `bash -n` clean and free of hard-coded server paths (`OPENLIST_STORAGE_DIR` comes from secret `SERVER_OPENLIST_DIR`; the script appends the distribution dir).
 
 ### Ask first

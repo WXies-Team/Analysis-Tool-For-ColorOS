@@ -43,53 +43,18 @@ jobs:
       # 统一计算 Channel / Version Name / Build ID（Version Code = Build ID），
       # 直接写入 GITHUB_ENV 供本 job 全部后续步骤使用（无需独立 job，省一次全历史 clone）
       - name: Determine channel and version
+        id: determine
+        # Single source of truth for CHANNEL / VERSION / Build ID (VERSIONING §2-§6).
+        # Unattended: a pushed "chore(release): beta|stable" marker (or a manual tag) is routed
+        # here; the target version is computed from merged commits, never hand-picked.
         run: |
           set -Eeuo pipefail
-          BUILD_ID=${{ github.run_number }}
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
-              echo "非法 tag: $TAG，只允许 x.y.z 或 x.y.z-beta.N（禁止 v 前缀等额外前后缀）"
-              exit 1
-            fi
-            if [[ "$TAG" == *-beta.* ]]; then CHANNEL=beta; else CHANNEL=stable; fi
-            VERSION="$TAG"
-          else
-            CHANNEL=alpha
-            BASE=$(tr -d '[:space:]' < VERSION)
-            if [[ ! "$BASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "VERSION 文件格式错误: '$BASE'，应为 MAJOR.MINOR.PATCH"
-              exit 1
-            fi
-            # alpha.N = 距 VERSION 上次修改的提交数（最小 1）。锚点**只**取 VERSION 修改点，
-            # 不用 Beta/Stable tag——发 beta 不 bump VERSION 时若以 beta tag 为锚点，下一轮
-            # alpha 会重新从 1 数起，同一 target 版本反复产出 alpha.1。只有 VERSION 变更
-            # （新 target）才重置序号，符合 SemVer「同一版本预发布标识不可复用」。
-            # main 禁止 rebase/squash，否则计数会回退。
-            ANCHOR=$(git log -1 --format=%H -- VERSION 2>/dev/null || true)
-            if [ -z "$ANCHOR" ]; then
-              echo "无法确定 alpha 计数锚点：VERSION 不在提交历史中"
-              exit 1
-            fi
-            # paths-ignore 跳过的纯 docs 提交不触发构建，也不该占 alpha 序号，
-            # 否则两次构建之间会跳号（如 29 → 35）。这里的 pathspec 与上面的
-            # paths-ignore 逐项对齐：docs/**、*.md（含 **/*.md）、.github/**。
-            ALPHA_COUNT=$(git rev-list --count "$ANCHOR"..HEAD -- . \
-              ':(exclude)docs/**' ':(exclude)*.md' ':(exclude).github/**')
-            VERSION="$BASE-alpha.$(( ALPHA_COUNT > 0 ? ALPHA_COUNT : 1 ))"
-          fi
-          {
-            echo "CHANNEL=$CHANNEL"
-            echo "VERSION=$VERSION"
-            echo "BUILD_ID=$BUILD_ID"
-            echo "VERSION_CODE=$BUILD_ID"
-          } >> "$GITHUB_ENV"
-          echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
+          bash ci/determine-version.sh
 
       # Beta/Stable 必须由发布者按 ~/.config/opencode/docs/release-notes-style.md 写好 release-notes.md；
       # alpha 的日志完全自动生成，校验脚本会直接跳过。
       - name: Check release notes
-        if: env.CHANNEL != 'alpha'
+        if: env.RELEASE == '1'
         run: bash ci/check-release-notes.sh
 
       # 日志范围按 channel 分段（VERSIONING §9.1）：
@@ -410,7 +375,7 @@ jobs:
 
       # Beta/Stable：Tag 触发时附带发布 GitHub Release（notes = release.md，Markdown）
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE == '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
