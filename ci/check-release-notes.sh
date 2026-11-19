@@ -2,7 +2,7 @@
 # Validate the AI-written release notes for tagged channels (beta / stable).
 # Alpha ships auto-generated logs only, so this script is a no-op for alpha; CHANNEL is still
 # required (missing channel fails fast). Called by build.yml before "Generate release log".
-# Format contract: templates/release-notes-style.md.
+# Format contract: docs/release-notes-style.md.
 # Usage: ci/check-release-notes.sh <channel>   (CHANNEL env is also accepted)
 set -Eeuo pipefail
 shopt -s inherit_errexit
@@ -18,7 +18,7 @@ fi
 
 fail() { echo "::error::[check-release-notes] $1" >&2; exit 1; }
 
-[ -f "$NOTES_FILE" ] || fail "$NOTES_FILE is missing for $CHANNEL (format: templates/release-notes-style.md)"
+[ -f "$NOTES_FILE" ] || fail "$NOTES_FILE is missing for $CHANNEL (format: docs/release-notes-style.md)"
 [ -s "$NOTES_FILE" ] || fail "$NOTES_FILE is empty for $CHANNEL"
 
 # No raw Conventional Commit prefixes — the notes file is user-facing Chinese copy, not git log.

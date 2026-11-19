@@ -86,7 +86,7 @@ jobs:
           } >> "$GITHUB_ENV"
           echo "Channel: $CHANNEL / Version Name: $VERSION / Build ID = Version Code: $BUILD_ID"
 
-      # Beta/Stable 必须由发布者按 ~/.config/opencode/templates/release-notes-style.md 写好 release-notes.md；
+      # Beta/Stable 必须由发布者按 ~/.config/opencode/docs/release-notes-style.md 写好 release-notes.md；
       # alpha 的日志完全自动生成，校验脚本会直接跳过。
       - name: Check release notes
         if: env.CHANNEL != 'alpha'

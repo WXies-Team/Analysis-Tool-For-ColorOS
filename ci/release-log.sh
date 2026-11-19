@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Generate Release Log with the hybrid policy (see ~/.config/opencode/RELEASE-PIPELINE.md §1):
+# Generate Release Log with the hybrid policy (see ~/.config/opencode/docs/RELEASE-PIPELINE.md §1):
 #   alpha  -> auto from commits only (feat/fix/perf) + banner
-#   beta   -> release-notes.md (AI-written, per templates/release-notes-style.md) for the
+#   beta   -> release-notes.md (AI-written, per docs/release-notes-style.md) for the
 #             highlight, plus auto-generated grouped details appended
 #   stable -> release-notes.md required (CI fails without it), used as primary notes + details
 # There is NO "修复了一些已知问题" fallback: with nothing qualifying, emit only the honest
@@ -37,7 +37,7 @@ esac
 
 NOTES_FILE="release-notes.md"
 if [ "$NEED_NOTES" -eq 1 ] && { [ ! -f "$NOTES_FILE" ] || [ ! -s "$NOTES_FILE" ]; }; then
-  echo "::error::$CHANNEL requires a non-empty release-notes.md (format: templates/release-notes-style.md)"
+  echo "::error::$CHANNEL requires a non-empty release-notes.md (format: docs/release-notes-style.md)"
   exit 1
 fi
 
