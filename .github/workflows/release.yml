@@ -1,0 +1,56 @@
+name: release
+
+# Analysis-Tool 发版：semantic-release 决定版本 -> pack-all.sh 打包 8 平台 -> 上传 OpenList + GitHub Release。
+# 版本完全由 Conventional Commit 决定，无 VERSION 文件、无 marker、无人工步骤。
+on:
+  push:
+    branches: [main, beta]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      # 干净的源码副本供打包使用（原流程也是 checkout 到 repo/ 子目录）
+      - name: Checkout source for packaging
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          path: repo
+          fetch-depth: 1
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: '22'
+
+      - name: Install semantic-release
+        run: npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog conventional-changelog-conventionalcommits
+
+      - name: Run semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_PORT: ${{ vars.SSH_PORT || '22' }}
+          OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
+        run: npx semantic-release
