@@ -88,9 +88,26 @@ PY
     [ "$VERSION_CODE" -gt "$OLD_CODE" ] || fail "versionCode 回退: $VERSION_CODE <= $OLD_CODE ($CURRENT_NAME)"
   fi
   if [ "$CHANNEL" = "stable" ]; then
-    PREV_TAG=$(git tag --list '*.*.*.0' --sort=-v:refname | grep -v "^${GIT_TAG}$" | head -1 || true)
-    if [ -n "$PREV_TAG" ]; then
-      OLD_CODE=$(python3 - "$PREV_TAG" <<'PY'
+    # 稳定版的上一版也从服务器读（和 beta 同一套网络机制）——tag 只用来触发发版，
+    # 不再参与版本/单调校验。首版（服务器无 stable version.json）读不到则跳过校验。
+    STABLE_RAW=$(curl -fsS --max-time 20 \
+      "https://storage.horatio.cn/api/fs/get?path=/$PROJECT/stable/version.json" 2>/dev/null \
+      | python3 -c 'import sys,json
+try:
+ print(json.load(sys.stdin)["data"]["raw_url"])
+except Exception:
+ print("")' 2>/dev/null || true)
+    PREV_STABLE=""
+    if [ -n "$STABLE_RAW" ]; then
+      PREV_STABLE=$(curl -fsS --max-time 20 "$STABLE_RAW" 2>/dev/null \
+        | python3 -c 'import sys,json
+try:
+ print(json.load(sys.stdin).get("versionName",""))
+except Exception:
+ print("")' 2>/dev/null || true)
+    fi
+    if [ -n "$PREV_STABLE" ]; then
+      OLD_CODE=$(python3 - "$PREV_STABLE" <<'PY'
 import sys
 try:
     a,b,c,d=(int(x) for x in sys.argv[1].split("."))
@@ -99,7 +116,7 @@ except Exception:
     print(-1)
 PY
 )
-      [ "$VERSION_CODE" -gt "$OLD_CODE" ] || fail "stable versionCode 回退: $VERSION_CODE <= $OLD_CODE ($PREV_TAG)"
+      [ "$VERSION_CODE" -gt "$OLD_CODE" ] || fail "stable versionCode 回退: $VERSION_CODE <= $OLD_CODE ($PREV_STABLE)"
     fi
   fi
 fi

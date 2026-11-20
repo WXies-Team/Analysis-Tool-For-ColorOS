@@ -8,19 +8,16 @@
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
-LAST_TAG=${1:-}
+LAST_TAG=${1:-}   # 兼容旧调用的参数位；tag 已不再作为 changelog 基准（tag 只触发 stable 发版）
 OUT=${2:-changelog.txt}
-# 增量基准（无 tag 方案）：上一版 version.json 里记录的 commit SHA。
-# beta 每次 push 都发版、不打 tag，所以用「上一版构建时的 commit」当区间起点——
-# 对应「.1→.2 只显示这段 commit」。tag 仍作为 stable/兜底基准（PREV_COMMIT 优先）。
+# 增量基准：上一版 version.json 里记录的 commit SHA（beta/stable 同机制，都从服务器网络读取）。
+# 「.1→.2 只显示这段 commit」。tag 不参与 changelog。
 PREV_COMMIT=${3:-}
 
 if [ -n "$PREV_COMMIT" ] && git rev-parse -q --verify "$PREV_COMMIT^{commit}" >/dev/null 2>&1; then
   RANGE="${PREV_COMMIT}..HEAD"
-elif [ -n "$LAST_TAG" ] && git rev-parse -q --verify "$LAST_TAG" >/dev/null; then
-  RANGE="${LAST_TAG}..HEAD"
 else
-  # 首版（服务器上还没有上一版 commit / 无任何 tag）：全量历史，符合「从零开始」。
+  # 首版（服务器上还没有上一版 commit）：全量历史，符合「从零开始」。
   RANGE="HEAD"
 fi
 

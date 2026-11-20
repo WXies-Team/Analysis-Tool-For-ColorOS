@@ -30,8 +30,8 @@ try:
 except Exception:
  print("")' 2>/dev/null || true)
 fi
-LAST_TAG=$(git tag --list '*.*.*.0' --sort=-v:refname | head -1 || true)
-bash "$DIR/gen-changelog.sh" "$LAST_TAG" changelog.txt "$PREV_COMMIT"
+# tag 只用来触发 stable 编译发版，不参与 changelog：基准一律走服务器 commit sha。
+bash "$DIR/gen-changelog.sh" "" changelog.txt "$PREV_COMMIT"
 cp changelog.txt release.md
 
 # pack-all.sh 现在接收四段 VERSION（产物名 <PREFIX>-<VERSION>-<platform>.zip）
