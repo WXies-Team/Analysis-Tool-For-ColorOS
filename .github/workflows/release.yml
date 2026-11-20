@@ -4,7 +4,7 @@ name: release
 # 版本完全由 Conventional Commit 决定，无 VERSION 文件、无 marker、无人工步骤。
 on:
   push:
-    branches: [main, beta]
+    branches: [main, beta, alpha]
   workflow_dispatch:
 
 defaults:
@@ -25,19 +25,19 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: true
 
       # 干净的源码副本供打包使用（原流程也是 checkout 到 repo/ 子目录）
       - name: Checkout source for packaging
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: repo
           fetch-depth: 1
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
 

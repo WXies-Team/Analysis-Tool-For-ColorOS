@@ -1,7 +1,8 @@
 // Analysis-Tool 发版配置（semantic-release），Analysis-Tool-For-ColorOS 由 registry.yaml 的 products: 替换。
 // 与客户端配置的差异：产物是 output/*.zip（8 平台工具包），打包由 ci/pack-all.sh 完成。
 export default {
-  branches: ["main", { name: "beta", prerelease: true }],
+  // 三通道齐全（semantic-release 原生支持 alpha/beta prerelease 分支）
+  branches: ["main", { name: "beta", prerelease: true }, { name: "alpha", prerelease: true }],
   tagFormat: "${version}",
   plugins: [
     ["@semantic-release/commit-analyzer", { preset: "conventionalcommits" }],
