@@ -41,3 +41,7 @@ jobs:
         uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           persona: regular
+          # 私有仓无 GitHub Advanced Security：关掉 SARIF 上传（否则 upload-sarif 403），
+          # 用 annotations 输出发现的问题。无需 security-events: write 权限。
+          advanced-security: false
+          annotations: true
