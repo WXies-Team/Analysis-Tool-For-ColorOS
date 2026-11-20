@@ -49,6 +49,8 @@ jobs:
           fetch-depth: 1
 
       - name: Prepare (changelog + pack 8 platforms)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash ci/prepare-release.sh 'Analysis-Tool-For-ColorOS' "$CHANNEL" "$VERSION_NAME" "$VERSION_CODE"
 
       - name: Upload to OpenList (signed version.json)
