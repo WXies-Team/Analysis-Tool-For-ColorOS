@@ -61,6 +61,7 @@ jobs:
           SSH_PORT: ${{ vars.SSH_PORT || '22' }}
           OPENLIST_STORAGE_DIR: ${{ secrets.SERVER_OPENLIST_DIR }}
           UPDATER_PRIVATE_KEY: ${{ secrets.UPDATER_PRIVATE_KEY }}
+          ARTIFACT_DIR: output
         run: bash ci/upload-openlist.sh
 
       - name: Create GitHub Release (stable only)
