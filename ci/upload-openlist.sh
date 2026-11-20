@@ -100,7 +100,7 @@ run_scp "$(dirname "$0")/storage-project-readme.md" "$SERVER_USER@$SERVER_HOST:$
 ARCHIVE_SCRIPT=$(cat << 'EOF'
 TARGET_DIR="$1"; CURRENT_VERSION="$2"; KEEP_VERSIONS="$3"
 ARCHIVE_DIR="$TARGET_DIR/以前的版本"
-rm -f "$TARGET_DIR"/*.zip "$TARGET_DIR"/*.txt "$TARGET_DIR"/version.json* 2>/dev/null || true
+rm -f "$TARGET_DIR"/*.zip "$TARGET_DIR"/*.txt 2>/dev/null || true
 for dir in "$TARGET_DIR"/*/; do
   [ -d "$dir" ] || continue
   name=$(basename "$dir")
