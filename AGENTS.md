@@ -23,8 +23,8 @@ No test suite; these are the only local checks. Local run needs Python 3.x + `ar
 
 | Task | Read |
 | --- | --- |
-| Release rules / templates | `~/.config/opencode/docs/VERSIONING.md`, `RELEASE-PIPELINE.md`, `COMMITTING.md` |
-| Shared across the three Analysis tools | `~/.config/opencode/docs/SISTER-REPOS.md` |
+| Release rules / templates | `~/.config/opencode/docs/versioning.md`, `release-pipeline.md`, `committing.md` |
+| Shared across the three Analysis tools | `~/.config/opencode/docs/sister-repos.md` |
 | CI / deploy behavior | `.github/workflows/release.yml`, `ci/pack-all.sh`, `ci/upload-openlist.sh` |
 | End-user usage | `README.md` |
 
