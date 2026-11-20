@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Analysis-Tool 上传：8 平台 zip -> OpenList，生成 Wails 式 version.json（artifacts[] 8 条）+ 签名。
-# 通道 beta / stable（无 alpha）。产物名 Analysis-Tool-For-ColorOS-<四段VERSION>-<Platform>.zip。
+# 通道 beta / stable（无 alpha）。产物名 ColorApkExtractor-<四段VERSION>-<Platform>.zip。
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
@@ -20,10 +20,10 @@ case "$CHANNEL" in
 esac
 
 SSH_PORT=${SSH_PORT:-22}
-BASE_STORAGE="$OPENLIST_STORAGE_DIR/Analysis-Tool-For-ColorOS"
+BASE_STORAGE="$OPENLIST_STORAGE_DIR/ColorApkExtractor"
 TARGET_DIR="$BASE_STORAGE/$CHANNEL"
 VERSION_DIR="$TARGET_DIR/$VERSION"
-ARTIFACT_PREFIX=${ARTIFACT_PREFIX:-Analysis-Tool-For-ColorOS}
+ARTIFACT_PREFIX=${ARTIFACT_PREFIX:-ColorApkExtractor}
 ARTIFACT_DIR=${ARTIFACT_DIR:-.}
 
 SSH_OPTS=(-i "$RUNNER_TEMP/openlist_key" -p "$SSH_PORT" -o StrictHostKeyChecking=accept-new -o BatchMode=yes)
@@ -58,19 +58,16 @@ VERSION_JSON_TMP="$RUNNER_TEMP/version.json"
 python3 - "$VERSION_JSON_TMP" "$ARTIFACT_DIR" "$ARTIFACT_PREFIX" "$VERSION" "$VERSION_CODE" "$CHANNEL" "$NOTES_JSON" <<'PY'
 import hashlib, json, os, sys
 out, adir, prefix, version, code, channel, notes = sys.argv[1:8]
-BASE = "https://storage.horatio.cn/Analysis-Tool-For-ColorOS"
+BASE = "https://storage.horatio.cn/ColorApkExtractor"
 # 平台目录名 -> Wails 风格 os-arch
 PLAT = {
-    "Windows-x86_64": "windows-x86_64", "Linux-x86_64": "linux-x86_64",
-    "Linux-arm64": "linux-arm64", "Darwin-x86_64": "darwin-x86_64",
-    "Darwin-arm64": "darwin-arm64", "Android-arm64": "android-arm64",
-    "Android-x86_64": "android-x86_64", "WSL-x86_64": "wsl-x86_64",
+    # 平台名已是规范 os-arch（小写 + x86_64/arm64），直接作为 platform；未知值兜底小写
 }
 arts = []
 needle = prefix + "-" + version + "-"
 for fn in sorted(f for f in os.listdir(adir) if f.startswith(needle) and f.endswith(".zip")):
     tail = fn[len(needle):-4]              # 平台名
-    platform = PLAT.get(tail, tail.lower())
+    platform = tail.lower()
     data = open(os.path.join(adir, fn), "rb").read()
     arts.append({
         "platform": platform, "fileName": fn,

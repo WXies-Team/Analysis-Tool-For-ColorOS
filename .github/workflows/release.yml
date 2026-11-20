@@ -43,7 +43,7 @@ jobs:
             CHANNEL=beta; TAG=""
           fi
           echo "channel=$CHANNEL tag=$TAG"
-          bash ci/determine-version.sh "$CHANNEL" 'Analysis-Tool-For-ColorOS' VERSION "$TAG"
+          bash ci/determine-version.sh "$CHANNEL" 'ColorApkExtractor' VERSION "$TAG"
 
       # 干净源码副本供打包（pack-all.sh 从 ./repo 取源码）
       - name: Checkout source for packaging
@@ -55,7 +55,7 @@ jobs:
       - name: Prepare (changelog + pack 8 platforms)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash ci/prepare-release.sh 'Analysis-Tool-For-ColorOS' "$CHANNEL" "$VERSION_NAME" "$VERSION_CODE"
+        run: bash ci/prepare-release.sh 'ColorApkExtractor' "$CHANNEL" "$VERSION_NAME" "$VERSION_CODE"
 
       - name: Upload to OpenList (signed version.json)
         env:

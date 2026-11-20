@@ -4,7 +4,7 @@
 <div style="font-size: 13px; opacity: 0.75;">两个版本通道相互独立 · 按需要选择，各通道按策略保留历史版本</div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 14px;">
-<a href="/Analysis-Tool-For-ColorOS/stable/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
+<a href="/ColorApkExtractor/stable/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
 <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
 <div style="display: flex; align-items: center; gap: 8px;">
 <span style="font-size: 16px; font-weight: 600;">📁 正式版 (Stable)</span>
@@ -14,7 +14,7 @@
 </div>
 <div style="font-size: 13px; font-weight: 600; color: #16a34a; white-space: nowrap; margin-left: 16px; flex-shrink: 0;">进入通道 →</div>
 </a>
-<a href="/Analysis-Tool-For-ColorOS/beta/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
+<a href="/ColorApkExtractor/beta/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
 <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
 <div style="display: flex; align-items: center; gap: 8px;">
 <span style="font-size: 16px; font-weight: 600;">📁 测试版 (Beta)</span>
