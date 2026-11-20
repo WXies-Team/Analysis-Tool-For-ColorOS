@@ -34,12 +34,27 @@ else
   exec 9>"$LOCK_FILE"
   flock -x 9
 
-  CURRENT_NAME=$(curl -fsS --max-time 20 "https://storage.horatio.cn/$PROJECT/beta/version.json" 2>/dev/null \
+  # 不能直连 https://storage.horatio.cn/<PROJECT>/beta/version.json —— 那是 OpenList/AList 的
+  # SPA 路由，返回的是前端 HTML（HTTP 200 但非 JSON），解析失败会让 BUILD 永远回退到 1。
+  # 正确做法（AList `POST /api/fs/get` 返回 `data.raw_url` 签名字段，见 OpenList 文档与
+  # server/handles/fsread.go 的 FsGetResp.RawURL）：先取 raw_url，再读真正的 version.json。
+  RAW_URL=$(curl -fsS --max-time 20 \
+    "https://storage.horatio.cn/api/fs/get?path=/$PROJECT/beta/version.json" 2>/dev/null \
     | python3 -c 'import sys,json
+try:
+ print(json.load(sys.stdin)["data"]["raw_url"])
+except Exception:
+ print("")' 2>/dev/null || true)
+
+  CURRENT_NAME=""
+  if [ -n "$RAW_URL" ]; then
+    CURRENT_NAME=$(curl -fsS --max-time 20 "$RAW_URL" 2>/dev/null \
+      | python3 -c 'import sys,json
 try:
  print(json.load(sys.stdin).get("versionName",""))
 except Exception:
  print("")' 2>/dev/null || true)
+  fi
 
   if [[ "$CURRENT_NAME" == "$XYZ."* ]]; then
     BUILD=${CURRENT_NAME##*.}
