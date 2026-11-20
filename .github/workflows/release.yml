@@ -42,7 +42,9 @@ jobs:
           node-version: '22'
 
       - name: Install semantic-release
-        run: npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog conventional-changelog-conventionalcommits
+        # semantic-release 25.x 的 release-notes-generator 不兼容 conventionalcommits@10
+        #（官方 issue #992/#1027：v10 会让 changelog 变空或 generateNotes 失败），pin 到 9.3.1
+        run: npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog conventional-changelog-conventionalcommits@9.3.1
 
       - name: Run semantic-release
         env:
