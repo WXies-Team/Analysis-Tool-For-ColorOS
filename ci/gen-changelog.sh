@@ -64,11 +64,13 @@ for key, label in order:
             if t not in seen:
                 seen.add(t)
                 out.append("- " + t)
-print("\n".join(out))
+sys.stdout.write("\n".join(out))  # 空列表写 0 字节（print 会输出换行，导致 -s 误判非空）
 ' > "$OUT"
 
 if [ ! -s "$OUT" ]; then
-  echo "::error::生成的 changelog.txt 为空（该区间无用户可见变更），拒绝发布空文案"
-  exit 1
+  # 区间内无用户可见变更（如纯 ci/docs 提交触发的发版）不能拒绝发布——
+  # 否则整条发版链路挂掉。写一句中性说明，与客户端「本次更新未附带更新说明」兜底呼应。
+  echo "本次更新未附带更新说明" > "$OUT"
+  echo "::notice::区间无用户可见变更，使用中性兜底文案"
 fi
 echo "changelog 已生成: $OUT ($(wc -l < "$OUT") 行)"
