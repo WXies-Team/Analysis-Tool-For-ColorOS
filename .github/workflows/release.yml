@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
     tags: ['*.*.*.0']
+    # 纯文档改动不发版（README/docs 进 build.yml 门禁即可，不必产出新 beta）
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 defaults:
