@@ -1,0 +1,43 @@
+name: lint-workflows
+
+# 统一 workflow 静态检查：actionlint（语法/表达式）+ zizmor（安全：unpinned/template-injection/权限）。
+# 各仓库用同一份副本（verbatim 模板分发），不依赖跨仓库 reusable workflow 的 secrets 传递。
+# zizmor 用 annotations 输出（SARIF 需公开仓或 GHAS，本组多为私有仓）。
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        uses: reviewdog/action-actionlint@ae857e78c1b42b3d0a49637181b09d3d56d402b4 # v1.84.1
+        with:
+          reporter: github-pr-review
+        continue-on-error: true
+
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          persona: regular
