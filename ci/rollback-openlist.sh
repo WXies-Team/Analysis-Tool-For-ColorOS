@@ -32,7 +32,7 @@ AUDIT_LOG="$BASE_STORAGE/rollback.log"
 fail() { echo "::error::$1" >&2; exit 1; }
 
 # ---- 1. 输入校验（白名单，拒绝路径穿越与注入）----
-case "$CHANNEL" in alpha|beta|stable) ;; *) fail "CHANNEL 必须是 alpha/beta/stable，收到: $CHANNEL" ;; esac
+case "$CHANNEL" in beta|stable) ;; *) fail "CHANNEL 必须是 beta 或 stable，收到: $CHANNEL" ;; esac
 VER_RE='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
 [[ "$TARGET_VERSION" =~ $VER_RE ]] || fail "TARGET_VERSION 格式非法: $TARGET_VERSION"
 if [ -n "$DROP_VERSION" ]; then
@@ -83,9 +83,9 @@ fi
 test -f "$RESTORE_SRC/version.json" || { echo "::error::目标缺 version.json"; exit 1; }
 test -f "$RESTORE_SRC/README.md"   || { echo "::error::目标缺 README.md"; exit 1; }
 
-# 2b. 解析目标产物文件名（不信任 version.json 的内容，只取 apk_name 字段做白名单校验）
-APK_NAME=$(python3 -c 'import json,sys,re; d=json.load(open(sys.argv[1])); n=d.get("apk_name",""); print(n if re.fullmatch(r"[0-9A-Za-z._-]+",n) else "")' "$RESTORE_SRC/version.json")
-[ -n "$APK_NAME" ] || { echo "::error::version.json 的 apk_name 非法"; exit 1; }
+# 2b. 解析目标产物文件名（新 schema：artifacts[].fileName；不信任其内容，做白名单校验）
+APK_NAME=$(python3 -c 'import json,sys,re; d=json.load(open(sys.argv[1])); arts=d.get("artifacts",[]); n=arts[0].get("fileName","") if arts else ""; print(n if re.fullmatch(r"[0-9A-Za-z._-]+",n) else "")' "$RESTORE_SRC/version.json")
+[ -n "$APK_NAME" ] || { echo "::error::version.json 的 artifacts[0].fileName 非法"; exit 1; }
 
 echo "[rollback] 目标来源: $RESTORE_SRC / 产物: $APK_NAME"
 [ "$DRY_RUN" = "true" ] && { echo "[rollback] DRY RUN 预检通过，未修改"; exit 0; }
@@ -93,11 +93,11 @@ echo "[rollback] 目标来源: $RESTORE_SRC / 产物: $APK_NAME"
 # 2c. 备份当前指针（供失败恢复），并记录回滚前版本用于审计
 BACKUP="$ARCHIVE_DIR/.rollback-backup-$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$BACKUP"
-OLD_VER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version_name","?"))' "$TARGET_DIR/version.json" 2>/dev/null || echo '?')
-for f in version.json README.md; do [ -f "$TARGET_DIR/$f" ] && cp -p "$TARGET_DIR/$f" "$BACKUP/$f" || true; done
+OLD_VER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("versionName","?"))' "$TARGET_DIR/version.json" 2>/dev/null || echo '?')
+for f in version.json version.json.sig README.md; do [ -f "$TARGET_DIR/$f" ] && cp -p "$TARGET_DIR/$f" "$BACKUP/$f" || true; done
 
 restore_pointer() {
-  for f in version.json README.md; do [ -f "$BACKUP/$f" ] && mv -f "$BACKUP/$f" "$TARGET_DIR/$f" || true; done
+  for f in version.json version.json.sig README.md; do [ -f "$BACKUP/$f" ] && mv -f "$BACKUP/$f" "$TARGET_DIR/$f" || true; done
   echo "[rollback] 已恢复回滚前指针"
 }
 trap 'restore_pointer' ERR
@@ -106,7 +106,8 @@ trap 'restore_pointer' ERR
 if [ "$RESTORE_SRC" = "$ARCHIVED" ]; then
   rm -rf "$SNAPDIR" && mv "$ARCHIVED" "$SNAPDIR"
 fi
-for f in version.json README.md; do
+for f in version.json version.json.sig README.md; do
+  [ -f "$SNAPDIR/$f" ] || continue
   cp "$SNAPDIR/$f" "$TARGET_DIR/$f.tmp.$$" && mv -f "$TARGET_DIR/$f.tmp.$$" "$TARGET_DIR/$f"
 done
 trap - ERR
@@ -116,7 +117,7 @@ URL="https://storage.horatio.cn/$PRODUCT/$CHANNEL/$TARGET_VERSION/$APK_NAME"
 if ! curl -fsS --max-time 20 -o /dev/null "$URL"; then
   echo "::error::切换后验证失败：下载链接不可用 $URL，已自动恢复指针"; restore_pointer; exit 1
 fi
-CURRENT_VER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version_name",""))' "$TARGET_DIR/version.json")
+CURRENT_VER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("versionName",""))' "$TARGET_DIR/version.json")
 [ "$CURRENT_VER" = "$TARGET_VERSION" ] || { echo "::error::指针版本不一致，已恢复"; restore_pointer; exit 1; }
 
 # 2f. 删除被撤回版本：默认仅归档，PURGE=true 才彻底删

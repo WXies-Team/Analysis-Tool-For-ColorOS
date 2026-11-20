@@ -1,36 +1,20 @@
 #!/usr/bin/env bash
-# Analysis-Tool 的 semantic-release prepare 钩子：
-#   $1=VERSION  $2=GIT_TAG  $3=<PROJECT>；release notes 从 stdin 读入。
-# 1) notes(Markdown) -> changelog.txt（纯文本，保留 emoji 分组标题）
-# 2) 调 pack-all.sh 完成 8 平台打包
+# Analysis-Tool 发版 prepare（由 release.yml 在 determine-version 之后调用）：
+#   $1=<PROJECT>  $2=CHANNEL  $3=VERSION_NAME  $4=VERSION_CODE
+# 生成 changelog.txt / release.md，调 pack-all.sh 打包 8 平台。
 set -Eeuo pipefail
 shopt -s inherit_errexit
 
-VERSION=${1:?version required}
-GIT_TAG=${2:?gitTag required}
-PREFIX=${3:?project prefix required}
-BUILD_ID="${GITHUB_RUN_NUMBER:-1}"
+PREFIX=${1:?project prefix required}
+CHANNEL=${2:?channel required}
+VERSION=${3:?version required}
+VERSION_CODE=${4:?version code required}
 
-# notes 经 stdin 传入；先落临时文件再交给 Python，避免与 python3 heredoc 的 stdin 冲突
-# （旧版直接 sys.stdin.read() 读到的是 python heredoc 内容，导致 changelog.txt 永远只有空行）。
-NOTES_RAW=$(mktemp)
-trap 'rm -f "$NOTES_RAW"' EXIT
-cat > "$NOTES_RAW"
+DIR=$(dirname "$0")
+LAST_STABLE=$(git tag --list '*.*.*.0' --sort=-v:refname | head -1 || true)
+bash "$DIR/gen-changelog.sh" "$LAST_STABLE" changelog.txt
+cp changelog.txt release.md
 
-python3 - "$NOTES_RAW" <<'PYEOF'
-import re, sys
-raw = open(sys.argv[1], encoding="utf-8").read()
-lines = []
-for line in raw.splitlines():
-    s = line.strip()
-    if not s or s.startswith("## "):
-        continue
-    s = re.sub(r"^###\s+", "", s)
-    s = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", s)
-    s = s.replace("**", "")
-    lines.append(s)
-open("changelog.txt", "w", encoding="utf-8").write("\n".join(lines) + "\n")
-PYEOF
-test -s changelog.txt || { echo "::error::empty changelog.txt"; exit 1; }
-
-bash "$(dirname "$0")/pack-all.sh" "$VERSION" "$BUILD_ID" "$PREFIX"
+# pack-all.sh 现在接收四段 VERSION（产物名 <PREFIX>-<VERSION>-<platform>.zip）
+bash "$DIR/pack-all.sh" "$VERSION" "$PREFIX"
+echo "8 平台产物就绪 (channel=$CHANNEL versionCode=$VERSION_CODE)"

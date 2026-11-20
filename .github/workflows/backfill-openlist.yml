@@ -6,7 +6,7 @@ name: backfill-openlist
 #
 # 用法：workflow_dispatch
 #   version   要回填的版本（= Release tag，如 2.1.0，必填）
-#   channel   通道（stable / beta / alpha，默认 stable）
+#   channel   通道（stable / beta，默认 stable）
 #   build_id  version.json 的 build_id；旧版本体系没有 Build ID 时填 0
 #
 # 幂等：重复执行会覆盖同名版本目录，归档清理按 1/2/3 策略照常执行。
@@ -22,7 +22,7 @@ on:
         required: true
         default: 'stable'
         type: choice
-        options: [stable, beta, alpha]
+        options: [stable, beta]
       build_id:
         description: 'version.json 的 build_id（旧版本体系填 0）'
         required: false

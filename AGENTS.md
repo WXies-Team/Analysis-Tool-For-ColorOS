@@ -1,6 +1,6 @@
 # AGENTS.md — Analysis Tool For ColorOS
 
-Python CLI that downloads ColorOS ROMs, extracts images and version-tracks APKs into JSON sets; released with **semantic-release**: every push to `main`/`beta` runs `release.yml` (version from Conventional Commits → 8 platform zips → OpenList + GitHub Release). No `VERSION` file, no marker commit, no hand-written release notes.
+Python CLI that downloads ColorOS ROMs, extracts images and version-tracks APKs into JSON sets; released with **self-built pipeline**: every push to `main`/`beta` runs `release.yml` (version from Conventional Commits → 8 platform zips → OpenList + GitHub Release). No `VERSION` file, no marker commit, no hand-written release notes.
 
 ## Commands
 
@@ -8,14 +8,14 @@ Python CLI that downloads ColorOS ROMs, extracts images and version-tracks APKs 
 | --- | --- |
 | Install (only Python dep) | `pip install -r requirements.txt` (`pyaxmlparser==0.3.31`) |
 | Usage / all flags | `python3 main.py -h` (flow `-d` → `-p` → `-i` → `-f` → …) |
-| Release dry-run (no publish) | `npx --package semantic-release --package conventional-changelog-conventionalcommits semantic-release --dry-run --no-ci` |
+| Release dry-run (no publish) | `npx --package self-built pipeline --package conventional-changelog-conventionalcommits self-built pipeline --dry-run --no-ci` |
 | Pack script syntax | `bash -n ci/pack-all.sh && bash -n ci/prepare-release.sh && bash -n ci/publish-openlist.sh` |
 | Workflow YAML parse | `python3 -c "import yaml,sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" .github/workflows/*.yml` |
 | No server paths in source | `grep -rn '/www/' ci .github && echo FAIL \|\| echo OK` |
 
 No test suite; these are the only local checks. Local run needs Python 3.x + `aria2c` + 7zip; distributed zips bundle `payload-dumper-go` and `extract.erofs` in `tools/` (CI fetches them via `gh release download` — upstream 500s → rerun). The self-hosted runner's workspace persists, so check stale `output/` before trusting artifacts.
 
-## Release model (semantic-release)
+## Release model (self-built pipeline)
 
 `release.config.mjs` drives everything: `feat`→MINOR, `fix`/`perf`/`revert`→PATCH, `!`/`BREAKING CHANGE:`→MAJOR; push `main` → stable `X.Y.Z`, push `beta` → `X.Y.Z-beta.N`. `ci/prepare-release.sh` reads the generated notes from stdin, writes `changelog.txt` and calls `ci/pack-all.sh` (data-driven 8-platform packer); `ci/publish-openlist.sh` maps the channel and calls `ci/upload-openlist.sh` with `ARTIFACT_DIR=output` / `ARTIFACT_PREFIX`/ `PRIMARY_ARTIFACT`. GitHub Release assets are `output/*.zip`. Changelog headings are Chinese with emoji (`✨ 新增` / `🐛 修复` / `⚡ 改进` / `🚨 破坏性变更`).
 

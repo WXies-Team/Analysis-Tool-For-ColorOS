@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Analysis-Tool 多平台工具包打包（数据驱动，替代原来 8 组近乎相同的 workflow 步骤）。
-# 由 semantic-release 的 prepareCmd 间接调用：$1=VERSION $2=BUILD_ID $3=Analysis-Tool-For-ColorOS
+# 由 prepare-release-tool.sh 调用：$1=VERSION(四段 X.Y.Z.BUILD) $2=Analysis-Tool-For-ColorOS
+# 产物名 <PREFIX>-<VERSION>-<platform>.zip（VERSION 已含 BUILD，不再有独立 BUILD_ID 段）
 #
 # 每个平台: 下载 payload-dumper-go + erofs-tools，解压指定文件到 tools/，7z 打包到 output/。
 # 下载用 gh CLI（runner 自带），等价于原 robinraju/release-downloader 的 latest/tag + fileName。
@@ -8,8 +9,7 @@ set -Eeuo pipefail
 shopt -s inherit_errexit
 
 VERSION=${1:?version required}
-BUILD_ID=${2:?build id required}
-PREFIX=${3:?project prefix required}
+PREFIX=${2:?project prefix required}
 
 mkdir -p output
 
@@ -50,8 +50,8 @@ pack_one() {
   rm -rf "$tmp"
 
   ( cd "$dir" && 7z a -y "../$PREFIX-$platform.zip" ./* >/dev/null )
-  mv "$PREFIX-$platform.zip" "output/$PREFIX-$VERSION-$BUILD_ID-$platform.zip"
-  echo "packed: output/$PREFIX-$VERSION-$BUILD_ID-$platform.zip"
+  mv "$PREFIX-$platform.zip" "output/$PREFIX-$VERSION-$platform.zip"
+  echo "packed: output/$PREFIX-$VERSION-$platform.zip"
 }
 
 for spec in "${PLATFORMS[@]}"; do
@@ -59,5 +59,5 @@ for spec in "${PLATFORMS[@]}"; do
   pack_one "$platform" "$dumper_glob" "$dumper_file" "$erofs_glob" "$erofs_tag" "$erofs_files"
 done
 
-test -n "$(find output -name "$PREFIX-$VERSION-$BUILD_ID-*.zip" -print -quit)" \
+test -n "$(find output -name "$PREFIX-$VERSION-*.zip" -print -quit)" \
   || { echo "::error::no platform archives produced"; exit 1; }

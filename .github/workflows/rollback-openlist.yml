@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: '通道（alpha / beta / stable）'
+        description: '通道（beta / stable）'
         required: true
         type: choice
         default: beta
-        options: [stable, beta, alpha]
+        options: [stable, beta]
       target_version:
         description: '要恢复的目标版本目录名（如 1.2.3 或 1.2.3-beta.1）'
         required: true
