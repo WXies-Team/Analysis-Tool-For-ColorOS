@@ -10,10 +10,17 @@ shopt -s inherit_errexit
 
 LAST_TAG=${1:-}
 OUT=${2:-changelog.txt}
+# 增量基准（无 tag 方案）：上一版 version.json 里记录的 commit SHA。
+# beta 每次 push 都发版、不打 tag，所以用「上一版构建时的 commit」当区间起点——
+# 对应「.1→.2 只显示这段 commit」。tag 仍作为 stable/兜底基准（PREV_COMMIT 优先）。
+PREV_COMMIT=${3:-}
 
-if [ -n "$LAST_TAG" ] && git rev-parse -q --verify "$LAST_TAG" >/dev/null; then
+if [ -n "$PREV_COMMIT" ] && git rev-parse -q --verify "$PREV_COMMIT^{commit}" >/dev/null 2>&1; then
+  RANGE="${PREV_COMMIT}..HEAD"
+elif [ -n "$LAST_TAG" ] && git rev-parse -q --verify "$LAST_TAG" >/dev/null; then
   RANGE="${LAST_TAG}..HEAD"
 else
+  # 首版（服务器上还没有上一版 commit / 无任何 tag）：全量历史，符合「从零开始」。
   RANGE="HEAD"
 fi
 

@@ -11,8 +11,27 @@ VERSION=${3:?version required}
 VERSION_CODE=${4:?version code required}
 
 DIR=$(dirname "$0")
-LAST_STABLE=$(git tag --list '*.*.*.0' --sort=-v:refname | head -1 || true)
-bash "$DIR/gen-changelog.sh" "$LAST_STABLE" changelog.txt
+# beta 不打 tag，增量基准 = 服务器当前通道 version.json 里记录的上一版 commit（见 upload-openlist-tool.sh）。
+# 走 OpenList API 拿签名 raw_url 再读 JSON（直连页面路径会命中 SPA HTML）。
+# 读不到（首版 / 服务器故障）→ PREV_COMMIT 为空 → gen-changelog 回退全量。
+PREV_COMMIT=""
+RAW_URL=$(curl -fsS --max-time 20 \
+  "https://storage.horatio.cn/api/fs/get?path=/$PREFIX/$CHANNEL/version.json" 2>/dev/null \
+  | python3 -c 'import sys,json
+try:
+ print(json.load(sys.stdin)["data"]["raw_url"])
+except Exception:
+ print("")' 2>/dev/null || true)
+if [ -n "$RAW_URL" ]; then
+  PREV_COMMIT=$(curl -fsS --max-time 20 "$RAW_URL" 2>/dev/null \
+    | python3 -c 'import sys,json
+try:
+ print(json.load(sys.stdin).get("commit", ""))
+except Exception:
+ print("")' 2>/dev/null || true)
+fi
+LAST_TAG=$(git tag --list '*.*.*.0' --sort=-v:refname | head -1 || true)
+bash "$DIR/gen-changelog.sh" "$LAST_TAG" changelog.txt "$PREV_COMMIT"
 cp changelog.txt release.md
 
 # pack-all.sh 现在接收四段 VERSION（产物名 <PREFIX>-<VERSION>-<platform>.zip）

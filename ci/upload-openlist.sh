@@ -55,9 +55,13 @@ echo "== [OpenList] 生成并签名 version.json =="
 [ -s changelog.txt ] || { echo "::error::missing/empty changelog.txt"; exit 1; }
 NOTES_JSON=$(python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))' < changelog.txt)
 VERSION_JSON_TMP="$RUNNER_TEMP/version.json"
-python3 - "$VERSION_JSON_TMP" "$ARTIFACT_DIR" "$ARTIFACT_PREFIX" "$VERSION" "$VERSION_CODE" "$CHANNEL" "$NOTES_JSON" <<'PY'
+# 记录构建该版本时的 commit，供下次发版算增量 changelog（不打 tag 方案的基准）。
+# 用 CI 注入的 GITHUB_SHA（网络/CI 侧事实），不读本地 git —— 换 runner/环境无需改脚本。
+: "${GITHUB_SHA:?GITHUB_SHA is required (CI injects it)}"
+COMMIT_SHA="$GITHUB_SHA"
+python3 - "$VERSION_JSON_TMP" "$ARTIFACT_DIR" "$ARTIFACT_PREFIX" "$VERSION" "$VERSION_CODE" "$CHANNEL" "$NOTES_JSON" "$COMMIT_SHA" <<'PY'
 import hashlib, json, os, sys
-out, adir, prefix, version, code, channel, notes = sys.argv[1:8]
+out, adir, prefix, version, code, channel, notes, commit_sha = sys.argv[1:9]
 BASE = "https://storage.horatio.cn/ColorApkExtractor"
 # 平台目录名 -> Wails 风格 os-arch
 PLAT = {
@@ -79,6 +83,9 @@ if not arts:
 doc = {
     "schemaVersion": 1, "versionName": version, "versionCode": int(code),
     "channel": channel, "publishedAt": os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(),
+    # 构建该版本的 commit（npm provenance 的 Source Commit 同类做法），
+    # 下次发版读它当 git log <prev>..HEAD 的增量基准；客户端验签忽略此未知字段。
+    "commit": commit_sha,
     "notes": json.loads(notes), "artifacts": arts,
 }
 open(out, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=2) + "\n")
