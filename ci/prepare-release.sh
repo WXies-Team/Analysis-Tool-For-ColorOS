@@ -11,9 +11,15 @@ GIT_TAG=${2:?gitTag required}
 PREFIX=${3:?project prefix required}
 BUILD_ID="${GITHUB_RUN_NUMBER:-1}"
 
-python3 - <<'PY'
+# notes 经 stdin 传入；先落临时文件再交给 Python，避免与 python3 heredoc 的 stdin 冲突
+# （旧版直接 sys.stdin.read() 读到的是 python heredoc 内容，导致 changelog.txt 永远只有空行）。
+NOTES_RAW=$(mktemp)
+trap 'rm -f "$NOTES_RAW"' EXIT
+cat > "$NOTES_RAW"
+
+python3 - "$NOTES_RAW" <<'PYEOF'
 import re, sys
-raw = sys.stdin.read()
+raw = open(sys.argv[1], encoding="utf-8").read()
 lines = []
 for line in raw.splitlines():
     s = line.strip()
@@ -24,7 +30,7 @@ for line in raw.splitlines():
     s = s.replace("**", "")
     lines.append(s)
 open("changelog.txt", "w", encoding="utf-8").write("\n".join(lines) + "\n")
-PY
+PYEOF
 test -s changelog.txt || { echo "::error::empty changelog.txt"; exit 1; }
 
 bash "$(dirname "$0")/pack-all.sh" "$VERSION" "$BUILD_ID" "$PREFIX"

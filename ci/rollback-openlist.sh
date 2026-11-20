@@ -90,9 +90,10 @@ APK_NAME=$(python3 -c 'import json,sys,re; d=json.load(open(sys.argv[1])); n=d.g
 echo "[rollback] 目标来源: $RESTORE_SRC / 产物: $APK_NAME"
 [ "$DRY_RUN" = "true" ] && { echo "[rollback] DRY RUN 预检通过，未修改"; exit 0; }
 
-# 2c. 备份当前指针（供失败恢复）
+# 2c. 备份当前指针（供失败恢复），并记录回滚前版本用于审计
 BACKUP="$ARCHIVE_DIR/.rollback-backup-$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$BACKUP"
+OLD_VER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version_name","?"))' "$TARGET_DIR/version.json" 2>/dev/null || echo '?')
 for f in version.json README.md; do [ -f "$TARGET_DIR/$f" ] && cp -p "$TARGET_DIR/$f" "$BACKUP/$f" || true; done
 
 restore_pointer() {
@@ -133,7 +134,7 @@ fi
 
 # 2g. 审计日志
 printf '%s\t%s\t%s\t%s->%s\tdrop=%s\tpurge=%s\n' \
-  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${GITHUB_ACTOR:-local}" "$CHANNEL" "${CURRENT_VER:-?}" "$TARGET_VERSION" "$DROP_VERSION" "$PURGE" >> "$AUDIT_LOG"
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${GITHUB_ACTOR:-local}" "$CHANNEL" "$OLD_VER" "$TARGET_VERSION" "$DROP_VERSION" "$PURGE" >> "$AUDIT_LOG"
 echo "[rollback] 完成: $PRODUCT/$CHANNEL -> $TARGET_VERSION；审计已写入 $AUDIT_LOG"
 REMOTE
 
