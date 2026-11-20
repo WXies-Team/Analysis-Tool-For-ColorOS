@@ -123,53 +123,12 @@ run_scp "$VERSION_JSON_TMP" "$SERVER_USER@$SERVER_HOST:$TARGET_DIR/version.json"
 run_scp "$VERSION_JSON_TMP" "$SERVER_USER@$SERVER_HOST:$VERSION_DIR/version.json"
 rm -f "$VERSION_JSON_TMP"
 
-# 3. 维护项目根目录的版本选择美化卡片 README.md，供 OpenList 自动渲染
-echo "== [OpenList] 维护 Analysis-Tool-For-ColorOS 根目录版本选择卡片 README.md =="
+# 3. 维护项目根目录的版本选择卡片 README.md，供 OpenList 自动渲染。
+#    卡片内容统一由 ci/storage-project-readme.md 提供（registry.yaml 分发），
+#    不再在各仓库脚本内重复内嵌 HTML，避免风格漂移与过时文案。
+echo "== [OpenList] 维护项目根目录版本选择卡片 README.md =="
 run_ssh "mkdir -p '$BASE_STORAGE/alpha' '$BASE_STORAGE/beta' '$BASE_STORAGE/stable'"
-INDEX_README_TMP="$RUNNER_TEMP/index_readme.md"
-cat << 'EOF' > "$INDEX_README_TMP"
-<div style="max-width: 780px; margin: 0 auto; padding: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-<div style="text-align: center; margin: 16px 0 20px 0;">
-<div style="font-size: 22px; font-weight: 700; margin-bottom: 6px;">🔧 Analysis Tool For ColorOS 下载中心</div>
-<div style="font-size: 13px; opacity: 0.75;">根据使用需求选择对应版本通道 · 各通道独立保留与更新</div>
-</div>
-<div style="display: flex; flex-direction: column; gap: 14px;">
-<a href="/Analysis-Tool-For-ColorOS/stable/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
-<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
-<div style="display: flex; align-items: center; gap: 8px;">
-<span style="font-size: 16px; font-weight: 600;">📁 正式版 (Stable)</span>
-<span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(34,197,94,0.18); color: #16a34a; font-weight: 600;">推荐日常</span>
-</div>
-<div style="font-size: 13px; opacity: 0.75; line-height: 1.4;">经过充分验证的稳定版本，功能完善且经过多轮测试 · 保留最新 3 版</div>
-</div>
-<div style="font-size: 13px; font-weight: 600; color: #16a34a; white-space: nowrap; margin-left: 16px; flex-shrink: 0;">进入通道 →</div>
-</a>
-<a href="/Analysis-Tool-For-ColorOS/beta/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
-<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
-<div style="display: flex; align-items: center; gap: 8px;">
-<span style="font-size: 16px; font-weight: 600;">📁 公测版 (Beta)</span>
-<span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(234,88,12,0.18); color: #ea580c; font-weight: 600;">先行尝鲜</span>
-</div>
-<div style="font-size: 13px; opacity: 0.75; line-height: 1.4;">包含已进入公测候选的新特性与界面交互，欢迎体验与反馈 · 保留最新 2 版</div>
-</div>
-<div style="font-size: 13px; font-weight: 600; color: #ea580c; white-space: nowrap; margin-left: 16px; flex-shrink: 0;">进入通道 →</div>
-</a>
-<a href="/Analysis-Tool-For-ColorOS/alpha/" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(125,125,125,0.22); background: rgba(125,125,125,0.05); text-decoration: none; color: inherit; box-sizing: border-box;">
-<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
-<div style="display: flex; align-items: center; gap: 8px;">
-<span style="font-size: 16px; font-weight: 600;">📁 内测版 (Alpha)</span>
-<span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(147,51,234,0.18); color: #9333ea; font-weight: 600;">每日构建</span>
-</div>
-<div style="font-size: 13px; opacity: 0.75; line-height: 1.4;">主分支自动化 CI 每次构建，提供全平台压缩包 · 仅保留最新 1 版</div>
-</div>
-<div style="font-size: 13px; font-weight: 600; color: #9333ea; white-space: nowrap; margin-left: 16px; flex-shrink: 0;">进入通道 →</div>
-</a>
-</div>
-</div>
-EOF
-
-run_scp "$INDEX_README_TMP" "$SERVER_USER@$SERVER_HOST:$BASE_STORAGE/README.md"
-rm -f "$INDEX_README_TMP"
+run_scp "$(dirname "$0")/storage-project-readme.md" "$SERVER_USER@$SERVER_HOST:$BASE_STORAGE/README.md"
 
 # 4. 归档与清理旧版本：将同通道下的历史版本移入「以前的版本」，并按 1/2/3 策略保留
 echo "== [OpenList] 归档旧版本至 以前的版本/ 并清理 (通道: $CHANNEL, 总保留数: $KEEP_VERSIONS) =="
